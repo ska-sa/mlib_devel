@@ -44,8 +44,8 @@ Library {
 	ViewObjType		"SimulinkTopLevel"
 	LoadSaveID		"0"
 	Extents			[1884.0, 1003.0]
-	ZoomFactor		[4.034782608695652]
-	Offset			[14.78017241379311, 13.53017241379311]
+	ZoomFactor		[4.03]
+	Offset			[14.776054590570709, 13.526054590570723]
       }
     }
   }
@@ -55,9 +55,9 @@ Library {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "dbeuser"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Wed May 13 15:56:36 2015"
-  RTWModifiedTimeStamp	  353433392
-  ModelVersionFormat	  "1.%<AutoIncrement:16>"
+  LastModifiedDate	  "Fri May 22 10:43:15 2015"
+  RTWModifiedTimeStamp	  354192169
+  ModelVersionFormat	  "1.%<AutoIncrement:19>"
   ConfigurationManager	  "None"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -22130,7 +22130,7 @@ Library {
 	TiledPageScale		1
 	ShowPageBoundaries	off
 	ZoomFactor		"150"
-	SIDHighWatermark	"68"
+	SIDHighWatermark	"73"
 	Block {
 	  BlockType		  Inport
 	  Name			  "new_acc"
@@ -22345,6 +22345,37 @@ Library {
 	}
 	Block {
 	  BlockType		  Reference
+	  Name			  "Delay"
+	  SID			  "588:71"
+	  Ports			  [1, 1]
+	  Position		  [735, 209, 770, 231]
+	  ZOrder		  5
+	  LibraryVersion	  "1.2"
+	  SourceBlock		  "xbsIndex_r4/Delay"
+	  SourceType		  "Xilinx Delay Block"
+	  infoedit		  "Hardware notes: A delay line is a chain, each link of which is an SRL16 followed by a flip-flop."
+	  rst			  off
+	  infoeditControl	  "Selection of Reset will increase slice count due to use of real FFs and instead of SRLs"
+	  en			  off
+	  latency		  "1"
+	  dbl_ovrd		  off
+	  reg_retiming		  off
+	  xl_use_area		  off
+	  xl_area		  "[0,0,0,0,0,0,0]"
+	  has_advanced_control	  "0"
+	  sggui_pos		  "-7,19,416,361"
+	  block_type		  "delay"
+	  sg_icon_stat		  "35,22,1,1,white,blue,0,07b98262,right,,[ ],[ ]"
+	  sg_mask_display	  "fprintf('','COMMENT: begin icon graphics');\npatch([0 35 35 0 0 ],[0 0 22 22 0 ],[0.77 0.82 0.91"
+	  " ]);\nplot([0 35 35 0 0 ],[0 0 22 22 0 ]);\npatch([10.325 14.66 17.66 20.66 23.66 17.66 13.325 10.325 ],[14.33 14.3"
+	  "3 17.33 14.33 17.33 17.33 17.33 14.33 ],[1 1 1 ]);\npatch([13.325 17.66 14.66 10.325 13.325 ],[11.33 11.33 14.33 14"
+	  ".33 11.33 ],[0.931 0.946 0.973 ]);\npatch([10.325 14.66 17.66 13.325 10.325 ],[8.33 8.33 11.33 11.33 8.33 ],[1 1 1 "
+	  "]);\npatch([13.325 23.66 20.66 17.66 14.66 10.325 13.325 ],[5.33 5.33 8.33 5.33 8.33 8.33 5.33 ],[0.931 0.946 0.973"
+	  " ]);\nfprintf('','COMMENT: end icon graphics');\nfprintf('','COMMENT: begin icon text');\n\n\ncolor('black');disp('"
+	  "z^{-1}','texmode','on');\nfprintf('','COMMENT: end icon text');"
+	}
+	Block {
+	  BlockType		  Reference
 	  Name			  "Inverter"
 	  SID			  "588:7"
 	  Ports			  [1, 1]
@@ -22372,38 +22403,6 @@ Library {
 	  ".55 29.44 27.44 25.44 23.44 20.55 22.55 ],[4.22 4.22 6.22 4.22 6.22 6.22 4.22 ],[0.931 0.946 0.973 ]);\nfprintf('',"
 	  "'COMMENT: end icon graphics');\nfprintf('','COMMENT: begin icon text');\n\n\ncolor('black');disp('not');\nfprintf('"
 	  "','COMMENT: end icon text');\n"
-	}
-	Block {
-	  BlockType		  Reference
-	  Name			  "Reinterpret"
-	  SID			  "588:8"
-	  Ports			  [1, 1]
-	  Position		  [775, 82, 825, 98]
-	  ZOrder		  -8
-	  LibraryVersion	  "1.2"
-	  SourceBlock		  "xbsIndex_r4/Reinterpret"
-	  SourceType		  "Xilinx Type Reinterpreter Block"
-	  infoedit		  "Changes signal type without altering the binary representation.   You can change the signal between si"
-	  "gned and unsigned, and relocate the binary point.<br><br>Hardware notes: In hardware this block costs nothing.<br><"
-	  "br>Example:  Suppose the input is 6 bits wide, signed, with 2 fractional bits, and the output is forced to unsigned"
-	  " with 0 fractional bits.  Then an input of -2.0 (1110.00 in binary 2's complement) becomes an output of 56 (111000 "
-	  "in binary)."
-	  force_arith_type	  on
-	  arith_type		  "Signed  (2's comp)"
-	  force_bin_pt		  on
-	  bin_pt		  "max(0, bin_pt_in - (48 - n_bits_out))"
-	  has_advanced_control	  "0"
-	  sggui_pos		  "-9,19,372,364"
-	  block_type		  "reinterpret"
-	  block_version		  "10.1.3"
-	  sg_icon_stat		  "50,16,1,1,white,blue,0,6b04d0b0,right,,[ ],[ ]"
-	  sg_mask_display	  "fprintf('','COMMENT: begin icon graphics');\npatch([0 50 50 0 0 ],[0 0 16 16 0 ],[0.77 0.82 0.91"
-	  " ]);\nplot([0 50 50 0 0 ],[0 0 16 16 0 ]);\npatch([20.55 23.44 25.44 27.44 29.44 25.44 22.55 20.55 ],[10.22 10.22 1"
-	  "2.22 10.22 12.22 12.22 12.22 10.22 ],[1 1 1 ]);\npatch([22.55 25.44 23.44 20.55 22.55 ],[8.22 8.22 10.22 10.22 8.22"
-	  " ],[0.931 0.946 0.973 ]);\npatch([20.55 23.44 25.44 22.55 20.55 ],[6.22 6.22 8.22 8.22 6.22 ],[1 1 1 ]);\npatch([22"
-	  ".55 29.44 27.44 25.44 23.44 20.55 22.55 ],[4.22 4.22 6.22 4.22 6.22 6.22 4.22 ],[0.931 0.946 0.973 ]);\nfprintf('',"
-	  "'COMMENT: end icon graphics');\nfprintf('','COMMENT: begin icon text');\n\n\ncolor('black');disp('reinterpret');\nf"
-	  "printf('','COMMENT: end icon text');\n"
 	}
 	Block {
 	  BlockType		  Reference
@@ -22576,40 +22575,6 @@ Library {
 	}
 	Block {
 	  BlockType		  Reference
-	  Name			  "Slice_p"
-	  SID			  "588:15"
-	  Ports			  [1, 1]
-	  Position		  [685, 82, 720, 98]
-	  ZOrder		  2
-	  LibraryVersion	  "1.2"
-	  SourceBlock		  "xbsIndex_r4/Slice"
-	  SourceType		  "Xilinx Bit Slice Extractor Block"
-	  infoedit		  "Extracts a given range of bits from each input sample and presents it at the output.  The output type "
-	  "is ordinarily unsigned with binary point at zero, but can be Boolean when the slice is one bit wide.<br><br>Hardwar"
-	  "e notes: In hardware this block costs nothing."
-	  nbits			  "n_bits_out"
-	  boolean_output	  off
-	  mode			  "Upper Bit Location + Width"
-	  bit1			  "0"
-	  base1			  "MSB of Input"
-	  bit0			  "0"
-	  base0			  "LSB of Input"
-	  dbl_ovrd		  off
-	  has_advanced_control	  "0"
-	  sggui_pos		  "-9,19,543,459"
-	  block_type		  "slice"
-	  block_version		  "11.4"
-	  sg_icon_stat		  "35,16,1,1,white,blue,0,1fd851a7,right,,[ ],[ ]"
-	  sg_mask_display	  "fprintf('','COMMENT: begin icon graphics');\npatch([0 35 35 0 0 ],[0 0 16 16 0 ],[0.77 0.82 0.91"
-	  " ]);\nplot([0 35 35 0 0 ],[0 0 16 16 0 ]);\npatch([12.55 15.44 17.44 19.44 21.44 17.44 14.55 12.55 ],[10.22 10.22 1"
-	  "2.22 10.22 12.22 12.22 12.22 10.22 ],[1 1 1 ]);\npatch([14.55 17.44 15.44 12.55 14.55 ],[8.22 8.22 10.22 10.22 8.22"
-	  " ],[0.931 0.946 0.973 ]);\npatch([12.55 15.44 17.44 14.55 12.55 ],[6.22 6.22 8.22 8.22 6.22 ],[1 1 1 ]);\npatch([14"
-	  ".55 21.44 19.44 17.44 15.44 12.55 14.55 ],[4.22 4.22 6.22 4.22 6.22 6.22 4.22 ],[0.931 0.946 0.973 ]);\nfprintf('',"
-	  "'COMMENT: end icon graphics');\nfprintf('','COMMENT: begin icon text');\n\ncolor('black');port_label('output',1,'[a"
-	  ":b]');\nfprintf('','COMMENT: end icon text');\n"
-	}
-	Block {
-	  BlockType		  Reference
 	  Name			  "alumode"
 	  SID			  "588:16"
 	  Ports			  [0, 1]
@@ -22745,6 +22710,55 @@ Library {
 	  "1'=>'popup(0|P|A:B|A*B|C|P+C|A:B+C)','inp2'=>'popup(0|PCIN|P|C|PCIN>>17|P>>17)','opselect'=>'popup(C + A*B|PCIN + A"
 	  "*B|P + A*B|A * B|C + A:B|C - A:B|C|Custom)','userSelections'=>{'carry'=>'CIN','inp1'=>'P','inp2'=>'PCIN>>17','opsel"
 	  "ect'=>'C'}}}"
+	}
+	Block {
+	  BlockType		  Reference
+	  Name			  "convert"
+	  SID			  "588:70"
+	  Ports			  [1, 1]
+	  Position		  [725, 80, 770, 100]
+	  ZOrder		  4
+	  BackgroundColor	  "[0.501961, 1.000000, 0.501961]"
+	  AttributesFormatString  "N_7 ==> 4_3\ntruncate, wrap\nlatency = 4"
+	  LibraryVersion	  "1.43"
+	  LinkData {
+	    BlockName		    "Reinterpret"
+	    DialogParameters {
+	      sggui_pos		      "11,19,364,363"
+	      sg_icon_stat	      "40,18,1,1,white,blue,0,6b04d0b0,right,,[ ],[ ]"
+	      sg_mask_display	      "fprintf('','COMMENT: begin icon graphics');\npatch([0 40 40 0 0 ],[0 0 18 18 0 ],[0.77 0"
+	      ".82 0.91 ]);\nplot([0 40 40 0 0 ],[0 0 18 18 0 ]);\npatch([15.55 18.44 20.44 22.44 24.44 20.44 17.55 15.55 ],[1"
+	      "1.22 11.22 13.22 11.22 13.22 13.22 13.22 11.22 ],[1 1 1 ]);\npatch([17.55 20.44 18.44 15.55 17.55 ],[9.22 9.22 "
+	      "11.22 11.22 9.22 ],[0.931 0.946 0.973 ]);\npatch([15.55 18.44 20.44 17.55 15.55 ],[7.22 7.22 9.22 9.22 7.22 ],["
+	      "1 1 1 ]);\npatch([17.55 24.44 22.44 20.44 18.44 15.55 17.55 ],[5.22 5.22 7.22 5.22 7.22 7.22 5.22 ],[0.931 0.94"
+	      "6 0.973 ]);\nfprintf('','COMMENT: end icon graphics');\nfprintf('','COMMENT: begin icon text');\n\n\ncolor('bla"
+	      "ck');disp('reinterpret');\nfprintf('','COMMENT: end icon text');"
+	    }
+	    BlockName		    "adder"
+	    DialogParameters {
+	      sggui_pos		      "11,19,416,343"
+	      sg_icon_stat	      "45,113,2,1,white,blue,0,eeab5c4c,right,,[ ],[ ]"
+	      sg_mask_display	      "fprintf('','COMMENT: begin icon graphics');\npatch([0 45 45 0 0 ],[0 0 113 113 0 ],[0.77"
+	      " 0.82 0.91 ]);\nplot([0 45 45 0 0 ],[0 0 113 113 0 ]);\npatch([8.65 17.32 23.32 29.32 35.32 23.32 14.65 8.65 ],"
+	      "[62.66 62.66 68.66 62.66 68.66 68.66 68.66 62.66 ],[1 1 1 ]);\npatch([14.65 23.32 17.32 8.65 14.65 ],[56.66 56."
+	      "66 62.66 62.66 56.66 ],[0.931 0.946 0.973 ]);\npatch([8.65 17.32 23.32 14.65 8.65 ],[50.66 50.66 56.66 56.66 50"
+	      ".66 ],[1 1 1 ]);\npatch([14.65 35.32 29.32 23.32 17.32 8.65 14.65 ],[44.66 44.66 50.66 44.66 50.66 50.66 44.66 "
+	      "],[0.931 0.946 0.973 ]);\nfprintf('','COMMENT: end icon graphics');\nfprintf('','COMMENT: begin icon text');\nc"
+	      "olor('black');port_label('input',1,'a');\ncolor('black');port_label('input',2,'b');\ncolor('black');port_label("
+	      "'output',1,'\\bf{a + b}','texmode','on');\ncolor('black');disp('z^{-4}\\newline ','texmode','on');\ncolor('blac"
+	      "k');disp(' \\newline\\bf{}','texmode','on');\nfprintf('','COMMENT: end icon text');"
+	    }
+	  }
+	  UserDataPersistent	  on
+	  UserData		  "DataTag2"
+	  SourceBlock		  "casper_library_misc/convert"
+	  SourceType		  "convert"
+	  bin_pt_in		  "7"
+	  n_bits_out		  "4"
+	  bin_pt_out		  "3"
+	  quantization		  "Truncate"
+	  overflow		  "Wrap"
+	  latency		  "4"
 	}
 	Block {
 	  BlockType		  SubSystem
@@ -23443,7 +23457,7 @@ Library {
 	  DstPort		  3
 	}
 	Line {
-	  SrcBlock		  "Reinterpret"
+	  SrcBlock		  "convert"
 	  SrcPort		  1
 	  DstBlock		  "dout"
 	  DstPort		  1
@@ -23555,7 +23569,7 @@ Library {
 	  Points		  [20, 0]
 	  Branch {
 	    Points		    [0, 40]
-	    DstBlock		    "valid"
+	    DstBlock		    "Delay"
 	    DstPort		    1
 	  }
 	  Branch {
@@ -23574,7 +23588,7 @@ Library {
 	  SrcPort		  1
 	  Points		  [19, 0]
 	  Branch {
-	    DstBlock		    "Slice_p"
+	    DstBlock		    "convert"
 	    DstPort		    1
 	  }
 	  Branch {
@@ -23584,10 +23598,20 @@ Library {
 	  }
 	}
 	Line {
-	  SrcBlock		  "Slice_p"
+	  SrcBlock		  "Delay"
 	  SrcPort		  1
-	  DstBlock		  "Reinterpret"
+	  DstBlock		  "valid"
 	  DstPort		  1
+	}
+	Annotation {
+	  SID			  "588:73"
+	  Name			  "Pulse advanced here to be ahead of data0 again."
+	  Position		  [748, 258]
+	}
+	Annotation {
+	  SID			  "588:72"
+	  Name			  "Pulse comes in behild data0.\nIt's delayed here to be in line with data 0."
+	  Position		  [103, 157]
 	}
 	Annotation {
 	  SID			  "588:35"
@@ -36054,7 +36078,7 @@ Library {
       ZOrder		      -5
       BackgroundColor	      "[0.500000, 1.000000, 0.500000]"
       UserDataPersistent      on
-      UserData		      "DataTag2"
+      UserData		      "DataTag3"
       MinAlgLoopOccurrences   off
       PropExecContextOutsideSubsystem off
       RTWSystemCode	      "Auto"
@@ -38570,7 +38594,7 @@ Library {
 	      AttributesFormatString  "both edges\nactive high"
 	      LibraryVersion	      "1.43"
 	      UserDataPersistent      on
-	      UserData		      "DataTag3"
+	      UserData		      "DataTag4"
 	      SourceBlock	      "casper_library_misc/edge_detect"
 	      SourceType	      "edge_detect"
 	      edge		      "Both"
@@ -38636,7 +38660,7 @@ Library {
 	      AttributesFormatString  "rising edges\nactive high"
 	      LibraryVersion	      "1.43"
 	      UserDataPersistent      on
-	      UserData		      "DataTag4"
+	      UserData		      "DataTag5"
 	      SourceBlock	      "casper_library_misc/edge_detect"
 	      SourceType	      "edge_detect"
 	      edge		      "Rising"
@@ -40723,7 +40747,7 @@ Library {
 	  AttributesFormatString  "rising edges\nactive high"
 	  LibraryVersion	  "1.43"
 	  UserDataPersistent	  on
-	  UserData		  "DataTag5"
+	  UserData		  "DataTag6"
 	  SourceBlock		  "casper_library_misc/edge_detect"
 	  SourceType		  "edge_detect"
 	  edge			  "Rising"
@@ -41146,7 +41170,7 @@ Library {
   }
 }
 MatData {
-  NumRecords		  6
+  NumRecords		  7
   DataRecord {
     Tag			    DataTag0
     Data		    "  %)30     .    , (   8    (     @         %    \"     $    !     0         %  0 \"P    $    6    <W1A="
@@ -41176,6 +41200,20 @@ MatData {
   }
   DataRecord {
     Tag			    DataTag2
+    Data		    "  %)30     .    4 ,   8    (     @         %    \"     $    !     0         %  0 \"P    $    6    <W1A="
+    "&4       !P87)A;65T97)S    #@   #     &    \"     T         !0    @    !     0    $         !@ $ (C5X@ .    P (   "
+    "8    (     @         %    \"     $    !     0         %  0 #0    $   !;    9&5F875L=',      &)I;E]P=%]I;@    !N7V)"
+    "I='-?;W5T    8FEN7W!T7V]U=    '%U86YT:7IA=&EO;@!O=F5R9FQO=P      ;&%T96YC>0              #@   *@    &    \"     $ "
+    "        !0    @    !     @    $         #@   #@    &    \"     0         !0    @    !    !P    $         $     <  "
+    " !L871E;F-Y  X    X    !@    @    &          4    (     0    $    !          D    (             $ .    .     8    "
+    "(    !@         %    \"     $    !     0         )    \"            !Q #@   #@    &    \"     8         !0    @   "
+    " !     0    $         \"0    @            00 X    X    !@    @    &          4    (     0    $    !          D    "
+    "(            \"$ .    .     8    (    !          %    \"     $    (     0         0    \"    %1R=6YC871E#@   #    "
+    " &    \"     0         !0    @    !    !     $         $  $ %=R87 .    .     8    (    !@         %    \"     $   "
+    " !     0         )    \"            !! "
+  }
+  DataRecord {
+    Tag			    DataTag3
     Data		    "  %)30     .    , (   8    (     @         %    \"     $    !     0         %  0 \"P    $    6    <W1A="
     "&4       !P87)A;65T97)S    #@   #     &    \"     T         !0    @    !     0    $         !@ $ 'E(LP8.    H $   "
     "8    (     @         %    \"     $    !     0         %  0 \"P    $    W    9&5F875L=',   !V96-?;&5N     &%R:71H7W"
@@ -41185,7 +41223,7 @@ MatData {
     "    (            0$ .    .     8    (    !@         %    \"     $    !     0         )    \"               "
   }
   DataRecord {
-    Tag			    DataTag3
+    Tag			    DataTag4
     Data		    "  %)30     .    J 8   8    (     @         %    \"     $    !     0         %  0 \"P    $    6    <W1A="
     "&4       !P87)A;65T97)S    #@   #     &    \"     T         !0    @    !     0    $         !@ $ \"NX:@4.    & 8  "
     " 8    (     @         %    \"     $    !     0         %  0 \"0    $    _    9&5F875L=', 961G90      <&]L87)I='D >"
@@ -41209,7 +41247,7 @@ MatData {
     "    !    'P    $         $    !\\   !;+3$@+3$@(#$@(#$@+3$@+3$@(#$@(#$@+3$@+3%=  "
   }
   DataRecord {
-    Tag			    DataTag4
+    Tag			    DataTag5
     Data		    "  %)30     .    L 8   8    (     @         %    \"     $    !     0         %  0 \"P    $    6    <W1A="
     "&4       !P87)A;65T97)S    #@   #     &    \"     T         !0    @    !     0    $         !@ $ )#IO@4.    ( 8   "
     "8    (     @         %    \"     $    !     0         %  0 \"0    $    _    9&5F875L=', 961G90      <&]L87)I='D >%"
@@ -41233,7 +41271,7 @@ MatData {
     "!          %    \"     $    ?     0         0    'P   %LM,2 M,2 @,2 @,2 M,2 M,2 M,2 M,2 M,2 M,5T "
   }
   DataRecord {
-    Tag			    DataTag5
+    Tag			    DataTag6
     Data		    "  %)30     .    L 8   8    (     @         %    \"     $    !     0         %  0 \"P    $    6    <W1A="
     "&4       !P87)A;65T97)S    #@   #     &    \"     T         !0    @    !     0    $         !@ $ )#IO@4.    ( 8   "
     "8    (     @         %    \"     $    !     0         %  0 \"0    $    _    9&5F875L=', 961G90      <&]L87)I='D >%"
