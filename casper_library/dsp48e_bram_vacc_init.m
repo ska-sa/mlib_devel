@@ -38,7 +38,7 @@ function dsp48e_bram_vacc_init (blk, varargin)
 defaults = { ...
   'vec_len', 8, ...
   'arith_type', 'Unsigned', ...
-  'bin_pt_in', 0, ...
+  'bin_pt_in', 31, ...
   'n_bits_out', 32, ...
 };
 
@@ -71,24 +71,23 @@ if (bin_pt_in < 0),
   return
 end
 
-if (bin_pt_in > n_bits_out),
-  errordlg([blk, ': Input binary point cannot exceed output bit width.']);
-  return
-end
-
 if (n_bits_out < 1),
   errordlg([blk, ': Bit width must be greater than 0.']);
   return
 end
 
-if (n_bits_out > 32),
-  errordlg([blk, ': Bit width cannot exceed 32.']);
+if (n_bits_out > 48),
+  errordlg([blk, ': Output bit width cannot exceed 48.']);
   return
 end
 
 % Update sub-block parameters.
-
-set_param([blk, '/Reinterpret'], 'arith_type', arith_type)
+set_param([blk, '/convert'], 'bin_pt_in', num2str(bin_pt_in));
+set_param([blk, '/convert'], 'n_bits_out', num2str(n_bits_out));
+set_param([blk, '/convert'], 'bin_pt_out', num2str( bin_pt_in - (48 - n_bits_out) ));
+set_param([blk, '/convert'], 'quantization', 'Round  (biased: Up)');
+set_param([blk, '/convert'], 'overflow', 'Wrap');
+set_param([blk, '/convert'], 'latency', '2');
 
 % Save block state to stop repeated init script runs.
 save_state(blk, 'defaults', defaults, varargin{:});

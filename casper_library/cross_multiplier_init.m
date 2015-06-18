@@ -46,12 +46,13 @@ add_latency = get_var('add_latency', 'defaults', defaults, varargin{:});
 overflow = get_var('overflow', 'defaults', defaults, varargin{:});
 quantisation = get_var('quantisation', 'defaults', defaults, varargin{:});
 conv_latency = get_var('conv_latency', 'defaults', defaults, varargin{:});
+fanout_latency = get_var('fanout_latency', 'defaults', defaults, varargin{:});
 
 %delay infrastructure
 reuse_block(blk, 'sync_in', 'built-in/inport', ...
     'Port', '1', 'Position', [30 30 60 45]);
 reuse_block(blk, 'sync_delay', 'xbsIndex_r4/Delay', ...
-    'latency', 'mult_latency+add_latency+1+conv_latency', ...
+    'latency', 'mult_latency+add_latency+conv_latency+fanout_latency', ...
     'Position', [410 25 460 50]) 
 add_line(blk, 'sync_in/1', 'sync_delay/1');
 reuse_block(blk, 'sync_out', 'built-in/outport', ...
@@ -105,7 +106,7 @@ for input = 0:streams-1,
         %D* | AD* BD* CD* DD*
         
         %x_in = min(mult,input)
-        x_in = input
+        x_in = input;
         %y_in = min(input,mults/aggregation-mult-1)
         y_in = input+mult;
     
@@ -124,31 +125,31 @@ for input = 0:streams-1,
                 'Position', [550 100+(offset+(mult*aggregation)+substream)*tick 600 195+(offset+(mult*aggregation)+substream)*tick]);
 
             %set up delays to remove fanout from c_to_ri blocks
-            delay_name = ['delay', num2str(input), '_', num2str(mult), '_', num2str(substream), '_0'];
-            reuse_block(blk, delay_name, 'xbsIndex_r4/Delay', ...
-                'latency', '1', ...
-                'Position', [450 100+(offset+(mult*aggregation)+substream)*tick 480 100+(offset+(mult*aggregation)+substream)*tick+15]); 
+            delay_name = ['pipeline', num2str(input), '_', num2str(mult), '_', num2str(substream), '_0'];
+            reuse_block(blk, delay_name, 'casper_library_delays/pipeline', ...
+                'latency', 'fanout_latency', ...
+                'Position', [420 100+(offset+(mult*aggregation)+substream)*tick 480 100+(offset+(mult*aggregation)+substream)*tick+15]); 
             add_line(blk, ['c_to_ri', num2str(x_in), '_', num2str(substream), '/1'], [delay_name,'/1']);
             add_line(blk, [delay_name,'/1'], [mult_name,'/1']);
 
-            delay_name = ['delay', num2str(input), '_', num2str(mult), '_', num2str(substream), '_1'];
-            reuse_block(blk, delay_name, 'xbsIndex_r4/Delay', ...
-                'latency', '1', ...
-                'Position', [450 100+(offset+(mult*aggregation)+substream)*tick+30 480 100+(offset+(mult*aggregation)+substream)*tick+45]);    
+            delay_name = ['pipeline', num2str(input), '_', num2str(mult), '_', num2str(substream), '_1'];
+            reuse_block(blk, delay_name, 'casper_library_delays/pipeline', ...
+                'latency', 'fanout_latency', ...
+                'Position', [420 100+(offset+(mult*aggregation)+substream)*tick+30 480 100+(offset+(mult*aggregation)+substream)*tick+45]);    
             add_line(blk, ['c_to_ri', num2str(x_in), '_', num2str(substream), '/2'], [delay_name,'/1']);
             add_line(blk, [delay_name,'/1'], [mult_name,'/2']);
             
-            delay_name = ['delay', num2str(input), '_', num2str(mult), '_', num2str(substream), '_2'];
-            reuse_block(blk, delay_name, 'xbsIndex_r4/Delay', ...
-                'latency', '1', ...
-                'Position', [450 100+(offset+(mult*aggregation)+substream)*tick+60 480 100+(offset+(mult*aggregation)+substream)*tick+75]);    
+            delay_name = ['pipeline', num2str(input), '_', num2str(mult), '_', num2str(substream), '_2'];
+            reuse_block(blk, delay_name, 'casper_library_delays/pipeline', ...
+                'latency', 'fanout_latency', ...
+                'Position', [420 100+(offset+(mult*aggregation)+substream)*tick+60 480 100+(offset+(mult*aggregation)+substream)*tick+75]);    
             add_line(blk, ['c_to_ri', num2str(y_in), '_', num2str(substream), '/1'], [delay_name,'/1']);
             add_line(blk, [delay_name,'/1'], [mult_name,'/3']);
 
-            delay_name = ['delay', num2str(input), '_', num2str(mult), '_', num2str(substream), '_3'];
-            reuse_block(blk, delay_name, 'xbsIndex_r4/Delay', ...
-                'latency', '1', ...
-                'Position', [450 100+(offset+(mult*aggregation)+substream)*tick+90 480 100+(offset+(mult*aggregation)+substream)*tick+105]);    
+            delay_name = ['pipeline', num2str(input), '_', num2str(mult), '_', num2str(substream), '_3'];
+            reuse_block(blk, delay_name, 'casper_library_delays/pipeline', ...
+                'latency', 'fanout_latency', ...
+                'Position', [420 100+(offset+(mult*aggregation)+substream)*tick+90 480 100+(offset+(mult*aggregation)+substream)*tick+105]);    
             add_line(blk, ['c_to_ri', num2str(y_in), '_', num2str(substream), '/2'], [delay_name,'/1']);
             add_line(blk, [delay_name,'/1'], [mult_name,'/4']);
 
