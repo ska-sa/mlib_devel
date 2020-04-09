@@ -39,6 +39,8 @@ class pci_dma_axilite_master(YellowBlock):
         # Create a non-inverted clock too. 
         top.add_signal('axil_rst')
         top.assign_signal('axil_rst', '~axil_rst_n')
+        #top.assign_signal('axil_rst', 'sys_rst')        
+        #top.assign_signal('axil_clk', 'sys_clk')
 
         # AXI-Lite Master Interface
         inst.add_port('m_axil_araddr', 'M_AXI_araddr', width=32)
@@ -131,6 +133,9 @@ class pci_dma_axilite_master(YellowBlock):
 
         ## Make AXI clock asynchronous to the user clock
         # Need to wait until synthesis is complete for all the clocks to exist
+        #The axi1_clk is not generated as a clock for the Alveo U280. These constraints will cause the synthesis to fail. They will need to be fixed in the final design - suspect part
+        #mismatch issue with the 100GbE IP.
         tcl_cmds['post_synth'] += ['set_clock_groups -name asyncclocks_axi_sys_clk -asynchronous -group [get_clocks sys_clk_p_CLK] -group [get_clocks -include_generated_clocks axil_clk]']
         tcl_cmds['post_synth'] += ['set_clock_groups -name asyncclocks_pcie_usr_clk -asynchronous -group [get_clocks -include_generated_clocks -of_objects [get_nets user_clk]] -group [get_clocks -include_generated_clocks axil_clk]']
+        
         return tcl_cmds
