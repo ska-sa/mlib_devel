@@ -1,6 +1,6 @@
 name: alveo_u280
 manufacturer: Xilinx
-fpga: xcvu37p-fsvh2892-2-e
+fpga: xcu280-fsvh2892-2L-e #xcvu37p-fsvh2892-2-e
 family: ultrascaleplus
 backend_target: vivado
 mmbus_architecture: AXI4-Lite
@@ -11,7 +11,7 @@ sources: []
 constraints: []
 pcie:
   loc: PCIE4C_X1Y0
-  use_tandem: True
+  use_tandem: False #True
 onehundredgbe:
   refclk_freq_str: "161.1328125"
   cmac_loc:
@@ -57,16 +57,20 @@ pins:
     iostd: LVCMOS18
   qsfp_mgt_ref_clk_p:
     loc:
-      - AJ15
-      - AD13
-      - AG40
-      - AB42
+      - R40
+      - M42
+      #- AJ15
+      #- AD13
+      #- AG40
+      #- AB42
   qsfp_mgt_ref_clk_n:
     loc:
-      - AJ14
-      - AD12
-      - AG41
-      - AB43
+      - R41
+      - M43
+      #- AJ14
+      #- AD12
+      #- AG41
+      #- AB43
   qsfp_mgt_rx_p:
     loc:
       - AL6
