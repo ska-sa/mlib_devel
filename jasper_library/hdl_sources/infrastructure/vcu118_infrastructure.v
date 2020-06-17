@@ -7,6 +7,7 @@ module vcu118_infrastructure(
     output sys_clk270,
 
     output clk_200,
+    output clk_100,
 
     output sys_rst,
     output sys_clk_rst_sync,
@@ -16,7 +17,7 @@ module vcu118_infrastructure(
   // Sys clk is 300MHz on the VCU118
   wire sys_clk_ds;
   IBUFGDS #(
-    .IOSTANDARD("DIFF_SSTL12")
+    .IOSTANDARD("LVDS")
   ) ibufgds_sys_clk (
     .I (sys_clk_buf_p),
     .IB(sys_clk_buf_n),
@@ -33,12 +34,14 @@ module vcu118_infrastructure(
   wire clk_fb;
 
   wire pll_lock;
+  
+  assign pll_lock = 1'b1;
 
-  MMCM_BASE #(
-   .BANDWIDTH          ("OPTIMIZED"), // Jitter programming ("HIGH","LOW","OPTIMIZED")
+  MMCME4_ADV #(
+   .COMPENSATION       ("AUTO"),
    .CLKFBOUT_MULT_F    (4), // Multiply value for all CLKOUT (5.0-64.0).
    .CLKFBOUT_PHASE     (0.0),
-   .CLKIN1_PERIOD      (3.33), // VCU118 clock is 300 MHz
+   .CLKIN1_PERIOD      (4.0),//(3.33), // VCU118 clock is 300 MHz
    .CLKOUT0_DIVIDE_F   (1.0), // Divide amount for CLKOUT0 (1.000-128.000).
    .CLKOUT0_DUTY_CYCLE (0.5),
    .CLKOUT1_DUTY_CYCLE (0.5),
@@ -48,20 +51,19 @@ module vcu118_infrastructure(
    .CLKOUT5_DUTY_CYCLE (0.5),
    .CLKOUT6_DUTY_CYCLE (0.5),
    .CLKOUT0_PHASE      (0.0),
-   .CLKOUT1_PHASE      (0.0),
+   .CLKOUT1_PHASE      (90.0),
    .CLKOUT2_PHASE      (270),
    .CLKOUT3_PHASE      (0.0),
    .CLKOUT4_PHASE      (0.0),
    .CLKOUT5_PHASE      (0.0),
    .CLKOUT6_PHASE      (0.0),
-   .CLKOUT1_DIVIDE     (12),
-   .CLKOUT2_DIVIDE     (12),
-   .CLKOUT3_DIVIDE     (6),
-   .CLKOUT4_DIVIDE     (1),
+   .CLKOUT1_DIVIDE     (4),//(12),
+   .CLKOUT2_DIVIDE     (4),//(12),
+   .CLKOUT3_DIVIDE     (5),
+   .CLKOUT4_DIVIDE     (10),
    .CLKOUT5_DIVIDE     (1),
    .CLKOUT6_DIVIDE     (1),
    .CLKOUT4_CASCADE    ("FALSE"),
-   .CLOCK_HOLD         ("FALSE"),
    .DIVCLK_DIVIDE      (1), // Master division value (1-80)
    .REF_JITTER1        (0.0),
    .STARTUP_WAIT       ("FALSE")
@@ -80,10 +82,10 @@ module vcu118_infrastructure(
    .CLKOUT2B (),
    .CLKOUT3  (clk_200_dcm),
    .CLKOUT3B (),
-   .CLKOUT4  (),
+   .CLKOUT4  (clk_100_dcm),
    .CLKOUT5  (),
    .CLKOUT6  (),
-   .LOCKED   (pll_lock),
+   .LOCKED   (),//(pll_lock),
 
    .PWRDWN   (1'b0),
    .RST      (1'b0)
@@ -91,9 +93,9 @@ module vcu118_infrastructure(
   );
 
 
-  BUFG bufg_sysclk[3:0](
-    .I({sys_clk0_dcm, sys_clk180_dcm, sys_clk270_dcm, clk_200_dcm}),
-    .O({sys_clk0,     sys_clk180,     sys_clk270,     clk_200})
+  BUFG bufg_sysclk[4:0](
+    .I({sys_clk0_dcm, sys_clk180_dcm, sys_clk270_dcm, clk_200_dcm, clk_100_dcm}),
+    .O({sys_clk0,     sys_clk180,     sys_clk270,     clk_200,     clk_100})
   );
   
   /* reset gen */
