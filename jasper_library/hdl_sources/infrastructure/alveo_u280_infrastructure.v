@@ -13,7 +13,7 @@ module alveo_u280_infrastructure(
     output idelay_rdy
   );
 
-  // Sys clk is 300MHz on the ADM-PCIE-9H7
+  // Sys clk is 100MHz on the Aleo_U280
   wire sys_clk_ds;
   IBUFDS #(
     .IOSTANDARD("LVDS"),
@@ -35,11 +35,34 @@ module alveo_u280_infrastructure(
 
   wire pll_lock;
 
+//   Alveo U280 Clock Trees (from alveo-u280-xdc.xdc)
+//
+//    1) AB-557-03 - ABRACON AB-557-03-HCHC-F-L-C-T @ 100.000Mhz Dual Output PCIe MEMs Oscillator
+//
+//      - OUT0--> SYS_CLK5_P/SYS_CLK5_N @ 100.000Mhz - PCIe REFCLK1 for x16 and Bifrucated x8 Lanes 8-15 Asynchronous Clocking
+//                PINS: MGTREFCLK1P_225_AP13/MGTREFCLK1N_225_AP12
+//
+//      - OUT1--> SYSCLK_P/SYSCLK_P @ 100.000Mhz 1-to-4 Clock buffer
+//           |
+//           |--> SI53340-B-GM --> OUT0  SYSCLK0_P/SYSCLK0_N 100.000Mhz - System Clock for first DDR4 MIG interface and HBM Interfaces.
+//                             |   PINS: IO_L12P_T1U_N10_GC_A08_D24_65/IO_L12N_T1U_N11_GC_A09_D25_65
+//                             |
+//                             |-> OUT1  SYSCLK1_P/SYSCLK1_N 100.000Mhz - System Clock for second DDR4 MIG interface.
+//                             |   PINS: IO_L13P_T2L_N0_GC_QBC_69/IO_L13N_T2L_N1_GC_QBC_69
+//                             |
+//                             |-> OUT2  SYSCLK2_P/SYSCLK2_N 100.000Mhz - PCIe REFCLK1 for Bifrucated x8 Lanes 0-7 Asynchronous Clocking
+//                             |   PINS: MGTREFCLK1P_227_AK13/MGTREFCLK1N_227_AK12
+//                             |
+//                             |-> OUT3  SYSCLK3_P/SYSCLK3_N 100.000Mhz - BANK 75 100Mhz Input clock
+//                                 PINS: IO_L11P_T1U_N8_GC_75/IO_L11N_T1U_N9_GC_75
+
+// Use SLR2 region: SYSCLK_P/SYSCLK_P @ 100.000Mhz 1-to-4 Clock buffer OUT3  SYSCLK3_P/SYSCLK3_N 100.000Mhz - BANK 75 100Mhz Input clock
+
   MMCM_BASE #(
    .BANDWIDTH          ("OPTIMIZED"), // Jitter programming ("HIGH","LOW","OPTIMIZED")
-   .CLKFBOUT_MULT_F    (4), // Multiply value for all CLKOUT (5.0-64.0).
+   .CLKFBOUT_MULT_F    (10), // Multiply value for all CLKOUT (5.0-64.0).
    .CLKFBOUT_PHASE     (0.0),
-   .CLKIN1_PERIOD      (3.33), // Clock is 300 MHz
+   .CLKIN1_PERIOD      (10.0), // Clock is 100 MHz
    .CLKOUT0_DIVIDE_F   (1.0), // Divide amount for CLKOUT0 (1.000-128.000).
    .CLKOUT0_DUTY_CYCLE (0.5),
    .CLKOUT1_DUTY_CYCLE (0.5),
@@ -55,10 +78,10 @@ module alveo_u280_infrastructure(
    .CLKOUT4_PHASE      (0.0),
    .CLKOUT5_PHASE      (0.0),
    .CLKOUT6_PHASE      (0.0),
-   .CLKOUT1_DIVIDE     (12),
-   .CLKOUT2_DIVIDE     (12),
-   .CLKOUT3_DIVIDE     (6),
-   .CLKOUT4_DIVIDE     (1),
+   .CLKOUT1_DIVIDE     (4),// 4=> 100MHz * 10 / 4 = 250MHz sys_clk used in simulink
+   .CLKOUT2_DIVIDE     (4),// 4=> 100MHz * 10 / 4 = 250MHz sys_clk used in simulink
+   .CLKOUT3_DIVIDE     (5),// 5=> 100MHz * 10 / 5 = 200MHz for clk200
+   .CLKOUT4_DIVIDE     (10),// 10=> 100MHz * 10 / 10 = 100MHz for clk100
    .CLKOUT5_DIVIDE     (1),
    .CLKOUT6_DIVIDE     (1),
    .CLKOUT4_CASCADE    ("FALSE"),
