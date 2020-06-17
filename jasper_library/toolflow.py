@@ -409,7 +409,12 @@ class Toolflow(object):
             if '/' in obj.fullpath:
                 obj.fullpath = obj.fullpath.partition('/')[2]
             self.top.set_cur_blk('%s: %s'%(obj.tag.split(':')[1], obj.fullpath))
-            obj.modify_top(self.top)
+            try:
+               obj.modify_top(self.top)
+            # HK - I need the platform name to determine higher level connections to the 100GbE yellow block
+            except TypeError:
+                obj.modify_top(self.top,self.plat.name)
+
             self.sources += obj.sources
             self.ips += obj.ips
         # add AXI4-Lite architecture specfic stuff, which must be called after all yellow blocks have modified top.
@@ -573,7 +578,11 @@ class Toolflow(object):
         self.check_attr_exists('periph_objs', 'gen_periph_objs()')
         self.constraints = []
         for obj in self.periph_objs:
-            c = obj.gen_constraints()
+            try:
+                c = obj.gen_constraints()
+            # HK - I need the platform name to determine higher level connections to the 100GbE yellow block
+            except TypeError:
+                c = obj.gen_constraints(self.plat.name)
             if c is not None:
                 self.constraints += c
         self.logger.info('Generating physical constraints')
