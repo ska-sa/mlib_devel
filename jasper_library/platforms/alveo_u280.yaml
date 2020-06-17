@@ -13,145 +13,91 @@ pcie:
   loc: PCIE4C_X1Y0
   use_tandem: False #True
 onehundredgbe:
-  refclk_freq_str: "161.1328125"
+  refclk_freq_str: "156.25"
   cmac_loc:
-    - CMACE4_X0Y3
-    - CMACE4_X0Y4
-    - CMACE4_X0Y5
+    # Alveo U280 QSFP0 - GTY Quad 134 - X0Y40-X0Y43 - CMAC X0Y6
+    - CMACE4_X0Y6
+    # Alveo U280 QSFP1 - GTY Quad 135 - X0Y44-X0Y47 - CMAC X0Y7
+    - CMACE4_X0Y7
 provides:
   - qsfp0
   - qsfp1
-  - qsfp2
-  - qsfp3
 pins:
+  qsfp_mgt_ref_clk_p:
+    loc:
+      # Select Alveo U280 QSFP0 GTY Quad 134 - X0Y40-X0Y43 ref clock: MGT_SI570_CLOCK0   -> MGT Ref Clock 0 156.25MHz Default (Not User re-programmable)
+      - T42
+      # Select Alveo U280 QSFP1 GTY Quad 135 - X0Y44-X0Y47 ref clock: MGT_SI570_CLOCK1   -> MGT Ref Clock 0 156.25MHz Default (Not User re-programmable)
+      - P42
+  qsfp_mgt_ref_clk_n:
+    loc:
+      - T43
+      - P43
+  qsfp_mgt_rx_p:
+    loc:
+    # Alveo U280 QSFP0 - GTY Quad 134 - X0Y40-X0Y43 - CMAC X0Y6
+      - L53
+      - K51
+      - J53
+      - H51
+    # Alveo U280 QSFP1 - GTY Quad 135 - X0Y44-X0Y47 - CMAC X0Y7
+      - G53
+      - F51
+      - E53
+      - D51
+  qsfp_mgt_rx_n:
+    loc:
+    # Alveo U280 QSFP0 - GTY Quad 134 - X0Y40-X0Y43 - CMAC X0Y6
+      - L54
+      - K52
+      - J54
+      - H52
+    # Alveo U280 QSFP1 - GTY Quad 135 - X0Y44-X0Y47 - CMAC X0Y7
+      - G54
+      - F52
+      - E54
+      - D52
+  qsfp_mgt_tx_p:
+    loc:
+    # Alveo U280 QSFP0 - GTY Quad 134 - X0Y40-X0Y43 - CMAC X0Y6
+      - L48
+      - L44
+      - K46
+      - J48
+    # Alveo U280 QSFP1 - GTY Quad 135 - X0Y44-X0Y47 - CMAC X0Y7
+      - G48
+      - E48
+      - C48
+      - A49
+  qsfp_mgt_tx_n:
+    loc:
+    # Alveo U280 QSFP0 - GTY Quad 134 - X0Y40-X0Y43 - CMAC X0Y6
+      - L49
+      - L45
+      - K47
+      - J49
+    # Alveo U280 QSFP1 - GTY Quad 135 - X0Y44-X0Y47 - CMAC X0Y7
+      - G49
+      - E49
+      - C49
+      - A50
+  # Selecting Alveo U280 SYS_CLK3 (100MHz) which is in SLR2 and close to the QSP0 & QSFP1 CMACs
   sys_clk_p:
-    loc: BJ9
+    loc: G31
     iostd: LVDS
   sys_clk_n:
-    loc: BK9
+    loc: F31
     iostd: LVDS
-  # Use GPIO 9,10,11,12 for SPI
-  miso:
-    loc: BJ29
+  # supplied by Xilinx - Alveo U280 catastophic trip on HMB must be driven low to ensure board does not switch off
+  hbm_cattrip:
+    loc: D32
     iostd: LVCMOS18
-  mosi:
-    loc: BG32
-    iostd: LVCMOS18
-  sclk:
-    loc: BF32
-    iostd: LVCMOS18
-  cs_n:
-    loc: BK30
-    iostd: LVCMOS18
-  led:
-    iostd: LVCMOS18
-    loc:
-      - BF53
-      - BG48
-      - BG49
-      - BE54
-      - BE53
+  # not using the PCIe at the moment, AXI Master is connected to JTAG-AXIL bridge master
+  # Todo PCI Express lanes
   # PCI Express lanes
   pcie_rst_n:
     loc: BF41
     iostd: LVCMOS18
-  qsfp_mgt_ref_clk_p:
-    loc:
-      - R40
-      - M42
-      #- AJ15
-      #- AD13
-      #- AG40
-      #- AB42
-  qsfp_mgt_ref_clk_n:
-    loc:
-      - R41
-      - M43
-      #- AJ14
-      #- AD12
-      #- AG41
-      #- AB43
-  qsfp_mgt_rx_p:
-    loc:
-      - AL6
-      - AK4
-      - AJ2
-      - AH4
-      - AG2
-      - AF4
-      - AE2
-      - AE6
-      - AD4
-      - AC2
-      - AC6
-      - AB4
-      - AA2
-      - Y4
-      - W2
-      - V4
-  qsfp_mgt_rx_n:
-    loc:
-      - AL5
-      - AK3
-      - AJ1
-      - AH3
-      - AG1
-      - AF3
-      - AE1
-      - AE5
-      - AD3
-      - AC1
-      - AC5
-      - AB3
-      - AA1
-      - Y3
-      - W1
-      - V3
-  qsfp_mgt_tx_p:
-    loc:
-      - AK9
-      - AJ7
-      - AJ11
-      - AH9
-      - AG7
-      - AG11
-      - AF9
-      - AE11
-      - AD9
-      - AC11
-      - AB9
-      - AA7
-      - AA11
-      - Y9
-      - W7
-      - W11
-  qsfp_mgt_tx_n:
-    loc:
-      - AK8
-      - AJ6
-      - AJ10
-      - AH8
-      - AG6
-      - AG10
-      - AF8
-      - AE10
-      - AD8
-      - AC10
-      - AB8
-      - AA6
-      - AA10
-      - Y8
-      - W6
-      - W10
-  qsfp_modprs:
-    iostd: LVCMOS18
-    loc: [BN35, BN34, BP34, BL32]
-  qsfp_sda:
-    iostd: LVCMOS18
-    loc: [BN30, BM30, BP32, BM34]
-  qsfp_scl:
-    iostd: LVCMOS18
-    loc: [BN29, BL30, BN32, BM32]
   pcie_refclk_p:
     loc: AR15
   pcie_gty_rx_p:
@@ -190,55 +136,3 @@ pins:
       - BB9
       - BC11
       - BC7
-  # DTS pins
-  dts_gty_rx_p:
-    loc:
-      # bank 125. Firefly 0
-      - AY51
-      - AW53
-      - AW49
-      - AV51
-      # bank 124. Firefly 1
-      - BC53
-      - BB51
-      - BA53
-      - BA49
-      # bank 126. Firefly 2
-      - AU53
-      - AT51
-      - AR53
-      - AP51
-  dts_gty_tx_p:
-    loc:
-      # bank 125. Firefly 0
-      - AY46
-      - AW44
-      - AV46
-      - AU44
-      # bank 124. Firefly 1
-      - BC48
-      - BC44
-      - BB46
-      - BA44
-      # bank 126. Firefly 2
-      - AU48
-      - AT46
-      - AR48
-      - AR44
-  dts_gty_refclk_p:
-    loc:
-      # bank 125. Clocks banks 124/125
-      - AR40
-      # bank 126.
-      - AN40
-  dts_qsfp_modprsl:
-    iostd: LVCMOS18
-    loc:
-      # Firefly 0
-      - BG10
-      # Firefly 1
-      - BG9
-      # Firefly 2
-      - BF12
-
-
