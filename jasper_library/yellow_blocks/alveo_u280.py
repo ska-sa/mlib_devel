@@ -4,7 +4,7 @@ from constraints import ClockConstraint, PortConstraint, RawConstraint
 class alveo_u280(YellowBlock):
     def initialize(self):
         self.add_source('infrastructure/alveo_u280_infrastructure.v')
-        self.add_source('wbs_arbiter')
+        #self.add_source('wbs_arbiter')
         self.provides = ['sys_clk', 'sys_clk90', 'sys_clk180', 'sys_clk270']
 
     def modify_top(self,top):
@@ -21,6 +21,12 @@ class alveo_u280(YellowBlock):
 
         top.add_signal('sys_clk90')
         top.assign_signal('sys_clk90', '~sys_clk270')
+
+        # hbm_cattrip - HBM catastrophic trip
+        # tie low to prevent FPGA power rails from shutting off 
+        top.add_port('hbm_cattrip', 'hbm_cattrip', parent_port=True, dir='out', width=0)
+        top.assign_signal('hbm_cattrip', "1'b0")
+
         #top.assign_signal('user_rst', 'sys_rst')
         
 
@@ -29,14 +35,17 @@ class alveo_u280(YellowBlock):
         if self.use_microblaze:
             pass
         else:
-            children.append(YellowBlock.make_block({'tag':'xps:pci_dma_axilite_master'}, self.platform))
+            #children.append(YellowBlock.make_block({'tag':'xps:pci_dma_axilite_master'}, self.platform))
+            children.append(YellowBlock.make_block({'tag':'xps:jtag_axil_master'}, self.platform))
+            print ("JTAG to AXI Light Master Memory Mapped bus used")
         return children
 
     def gen_constraints(self):
         return [
             PortConstraint('sys_clk_n', 'sys_clk_n'),
             PortConstraint('sys_clk_p', 'sys_clk_p'),
-            ClockConstraint('sys_clk_p', period=3.333),
+            ClockConstraint('sys_clk_p', period=10.0),
+            PortConstraint('hbm_cattrip', 'hbm_cattrip'),
             #Refer to UG1314 page 23 for settings
             RawConstraint("set_property CONFIG_VOLTAGE 1.8 [ current_design ]"),
             RawConstraint("set_property BITSTREAM.CONFIG.CONFIGFALLBACK Enable [ current_design ]"),
