@@ -25,7 +25,8 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity ADC32RF45_7G5_DEC4_RX is
 	generic(
-		RX_POLARITY_INVERT : std_logic_vector(3 downto 0) := "0000");
+		RX_POLARITY_INVERT : std_logic_vector(3 downto 0) := "0000";
+		ENABLE_DEC32       : integer := 0);
 	port(
 		SYS_CLK_I        : in  std_logic;
 		SYS_RST_I        : in  std_logic;
@@ -43,7 +44,10 @@ entity ADC32RF45_7G5_DEC4_RX is
 		ADC_PLL_LOCKED   : in  std_logic;
 		STATUS_O         : out std_logic_vector(31 downto 0);
 		GBXF_RDEN_OUT    : out std_logic;
-		GBXF_RDEN_IN     : in  std_logic);
+		GBXF_RDEN_IN     : in  std_logic;
+		DECIMATION_RATE  : in  std_logic_vector(1 downto 0); -- 00 = DEC 4, 01 = DEC 8, 10 = DEC 16, 11 = DEC 16 and EXT_D2_BYPASS = 0
+		EXT_D2_BYPASS    : out std_logic -- 0 = INCLUDE EXTERNAL DEC 2 (COMBINE WITH DEC 16 FOR DEC 32), 1 = BYPASS EXTERNAL DEC 2
+		);
 end ADC32RF45_7G5_DEC4_RX;
 
 architecture ADC32RF45_11G2_RX_ARC of ADC32RF45_7G5_DEC4_RX is
@@ -57,7 +61,7 @@ architecture ADC32RF45_11G2_RX_ARC of ADC32RF45_7G5_DEC4_RX is
 	type stdlvec_arr_4bx4   is array (0 to 3)  of std_logic_vector(3 downto 0);
 	type stdlvec_arr_2bx4   is array (0 to 3)  of std_logic_vector(1 downto 0);
 	type stdlvec_arr_12bx20 is array (0 to 20) of std_logic_vector(11 downto 0);
-	type unsigned_arr_4bx4  is array (0 to 3)  of unsigned(3 downto 0);
+	type unsigned_arr_6bx4  is array (0 to 3)  of unsigned(5 downto 0);
 	type unsigned_arr_3bx4  is array (0 to 3)  of unsigned(2 downto 0);
 
 	----------------------------------------------
@@ -137,6 +141,15 @@ architecture ADC32RF45_11G2_RX_ARC of ADC32RF45_7G5_DEC4_RX is
 		GT_CPLLLOCK_O         : out std_logic_vector(3 downto 0));
 	end component;
 	
+	signal DECIMATION_RATE_z    : std_logic_vector(1 downto 0) := "00";
+	signal DECIMATION_RATE_z2   : std_logic_vector(1 downto 0) := "00";
+	signal DECIMATION_RATE_sync : std_logic_vector(1 downto 0) := "00";
+	attribute ASYNC_REG : string;
+	attribute ASYNC_REG of DECIMATION_RATE_z    : signal is "TRUE";
+	attribute ASYNC_REG of DECIMATION_RATE_z2   : signal is "TRUE";
+	attribute ASYNC_REG of DECIMATION_RATE_sync : signal is "TRUE";
+	signal EXT_D2_BYPASS_async : std_logic;
+	
 	----------------------------------------------
 	-- K28.5 (0xBC) COMMA CHARACTER VERIFICATION
 	----------------------------------------------
@@ -171,7 +184,7 @@ architecture ADC32RF45_11G2_RX_ARC of ADC32RF45_7G5_DEC4_RX is
 	signal chbnd_detk28p3_z2  : std_logic_vector(3 downto 0) := "0000";
 	signal chbnd_done         : std_logic                    := '0';
 	signal chbnd_done_z1      : std_logic                    := '0';
-	signal chbnd_plsfreq_cnt  : unsigned_arr_4bx4            := (others => "1000"); -- 8
+	signal chbnd_plsfreq_cnt  : unsigned_arr_6bx4            := (others => "100000"); -- 32
 	signal chbnd_plsfreq_err  : std_logic_vector(3 downto 0) := "0000";
 	signal chbnd_plsnum_cnt   : unsigned_arr_3bx4            := (others => "000");
 	signal chbnd_plsnum_err   : std_logic_vector(3 downto 0) := "0000";
@@ -224,8 +237,11 @@ architecture ADC32RF45_11G2_RX_ARC of ADC32RF45_7G5_DEC4_RX is
 	-- DATA UNFRAMING
 	----------------------------------------------
 	-- CONNECTIONS
-	signal unfrm_done    : std_logic;
-	signal unfrm_128bdat : std_logic_vector(127 downto 0);
+	signal unfrm_done : std_logic;
+	-- REGISTERS
+	signal unfrm_128bdat       : std_logic_vector(127 downto 0);
+	signal unfrm_128bdat_wrreq : std_logic;
+	signal unfrm_128count      : integer range 0 to 3 := 0;
 
 	----------------------------------------------
 	-- 10:16 GEARBOX LOGIC
@@ -244,6 +260,37 @@ architecture ADC32RF45_11G2_RX_ARC of ADC32RF45_7G5_DEC4_RX is
 		data_out_16x12b : out std_logic_vector(191 downto 0);
 		valid           : out std_logic);
 	end component;
+
+	----------------------------------------------
+	-- DEC 16 to 32 FIR FILTER 
+	----------------------------------------------
+	-- COMPONENTS
+	component dec16to32_fir_filter is
+	port (  
+		aresetn            : in  std_logic;
+		aclk               : in  std_logic;
+		s_axis_data_tvalid : in  std_logic;
+		s_axis_data_tready : out std_logic;
+		s_axis_data_tdata  : in  std_logic_vector(31 downto 0);
+		m_axis_data_tvalid : out std_logic;
+		m_axis_data_tdata  : out std_logic_vector(47 downto 0));
+	end component;
+	-- CONNECTIONS
+	signal d16to32fir_din      : std_logic_vector(31 downto 0);
+	signal d16to32fir_din_val  : std_logic;
+	signal d16to32fir_dout     : std_logic_vector(47 downto 0);
+	signal d16to32fir_dout_val : std_logic;
+	signal d16to32fir_rstn     : std_logic;    
+
+	----------------------------------------------
+	-- DEC 32 RETIMING
+	----------------------------------------------
+	-- CONNECTIONS
+	signal d32ret_rstn : std_logic;
+	-- REGISTERS
+	signal d32ret_cnt      : integer range 0 to 3 := 0;
+	signal d32ret_dout     : std_logic_vector(127 downto 0) := (others => '0');
+	signal d32ret_dout_val : std_logic := '0';
 	
 	----------------------------------------------
 	-- 10:16 GEARBOX FIFO
@@ -268,15 +315,15 @@ architecture ADC32RF45_11G2_RX_ARC of ADC32RF45_7G5_DEC4_RX is
 	-- COMPONENTS
 	component adc_cdc_fifo
 		port (
-		rst : in std_logic;
-		wr_clk : in std_logic;
-		rd_clk : in std_logic;
-		din : in std_logic_vector(127 downto 0);
-		wr_en : in std_logic;
-		rd_en : in std_logic;
-		dout : out std_logic_vector(127 downto 0);
-		full : out std_logic;
-		empty : out std_logic;
+		rst        : in  std_logic;
+		wr_clk     : in  std_logic;
+		rd_clk     : in  std_logic;
+		din        : in  std_logic_vector(127 downto 0);
+		wr_en      : in  std_logic;
+		rd_en      : in  std_logic;
+		dout       : out std_logic_vector(127 downto 0);
+		full       : out std_logic;
+		empty      : out std_logic;
 		prog_empty : out std_logic);
 	end component;
 
@@ -621,45 +668,45 @@ architecture ADC32RF45_11G2_RX_ARC of ADC32RF45_7G5_DEC4_RX is
 
 begin
 	--<TEST
-	-- ila_rphy_i : ila_rphy port map (
-		-- clk     => rxusrclk2,
-		-- probe0  => rphy_32bitpdat(0)    ,
-		-- probe1  => rphy_32bitpdat(1)    ,
-		-- probe2  => rphy_32bitpdat(2)    ,
-		-- probe3  => rphy_32bitpdat(3)    ,
-		-- probe4  => rphy_rxdisperr       ,
-		-- probe5  => rphy_rxnotintable    ,
-		-- probe6  => rphy_rxbufstatus     ,
-		-- probe7  => rphy_rxbyteisaligned ,
-		-- probe8  => "0000",
-		-- probe9  => rphy_rxfsmresetdone  ,
-		-- probe10 => "0000"     ,
-		-- probe11 => "0000",
-		-- probe12 => "0000",
-		-- probe13 => rphy_4bitk(0)        ,
-		-- probe14 => rphy_4bitk(1)        ,
-		-- probe15 => rphy_4bitk(2)        ,
-		-- probe16 => rphy_4bitk(3)        ,
-		-- probe17(0) => '0',
-		-- probe18(0) => '0'  ,
-		-- probe19(0) => rphy_softrst         );
+--	 ila_rphy_i : ila_rphy port map (
+--		 clk     => rxusrclk2,
+--		 probe0  => rphy_32bitpdat(0)    ,
+--		 probe1  => rphy_32bitpdat(1)    ,
+--		 probe2  => rphy_32bitpdat(2)    ,
+--		 probe3  => rphy_32bitpdat(3)    ,
+--		 probe4  => rphy_rxdisperr       ,
+--		 probe5  => rphy_rxnotintable    ,
+--		 probe6  => rphy_rxbufstatus     ,
+--		 probe7  => rphy_rxbyteisaligned ,
+--		 probe8  => "0000",
+--		 probe9  => rphy_rxfsmresetdone  ,
+--		 probe10 => "0000"     ,
+--		 probe11 => "0000",
+--		 probe12 => "0000",
+--		 probe13 => rphy_4bitk(0)        ,
+--		 probe14 => rphy_4bitk(1)        ,
+--		 probe15 => rphy_4bitk(2)        ,
+--		 probe16 => rphy_4bitk(3)        ,
+--		 probe17(0) => '0',
+--		 probe18(0) => '0'  ,
+--		 probe19(0) => rphy_softrst         );
 
-	-- ila_rctrl_i : ila_rctrl port map (
-		-- clk     => drpsysclk,
-		-- probe0  => std_logic_vector(rctrl_rstasrt_cnt ),
-		-- probe1  => std_logic_vector(rctrl_rstdasrt_cnt),
-		-- probe2  => std_logic_vector(rctrl_rstdelay_cnt),
-		-- probe3  => std_logic_vector(rctrl_datvalen_cnt),
-		-- probe4  => rctrl_fsmrstdone  ,
-		-- probe5  => rctrl_state_code  ,
-		-- probe6(0)  => rctrl_apll_locked ,
-		-- probe7(0)  => rctrl_rst         ,
-		-- probe8(0)  => '0'    ,
-		-- probe9(0)  => rctrl_adcpllrstn  ,
-		-- probe10(0) => '0'    ,
-		-- probe11(0) => rctrl_physoftrst  ,
-		-- probe12(0) => rctrl_rst_z1      ,
-		-- probe13(0) => rctrl_rstdone     );
+--	 ila_rctrl_i : ila_rctrl port map (
+--		 clk     => drpsysclk,
+--		 probe0  => std_logic_vector(rctrl_rstasrt_cnt ),
+--		 probe1  => std_logic_vector(rctrl_rstdasrt_cnt),
+--		 probe2  => std_logic_vector(rctrl_rstdelay_cnt),
+--		 probe3  => std_logic_vector(rctrl_datvalen_cnt),
+--		 probe4  => rctrl_fsmrstdone  ,
+--		 probe5  => rctrl_state_code  ,
+--		 probe6(0)  => rctrl_apll_locked ,
+--		 probe7(0)  => rctrl_rst         ,
+--		 probe8(0)  => '0'    ,
+--		 probe9(0)  => rctrl_adcpllrstn  ,
+--		 probe10(0) => '0'    ,
+--		 probe11(0) => rctrl_physoftrst  ,
+--		 probe12(0) => rctrl_rst_z1      ,
+--		 probe13(0) => rctrl_rstdone     );
 
 --	ila_chbnd_i : ila_chbnd port map (
 --		clk     => rxusrclk2,
@@ -795,8 +842,39 @@ begin
 --		 probe7(0)  => gbxf_empty ,
 --		 probe8(0)  => gbxf_prog_empty       ,
 --		 probe9(0)  => '0');
-	--TEST>
 
+--	 ila_gbxf_i : ila_gbxf port map (
+--		 clk        => adcdatclk,
+--		 probe0     => gbxf_dout             ,
+--		 probe1(0)  => gbxf_rst          ,
+--		 probe2(0)  => '0',
+--		 probe3(0)  => '0',
+--		 probe4(0)  => gbxf_dval ,
+--		 probe5(0)  => gbxf_rden_z1,
+--		 probe6(0)  => gbxf_rden ,
+--		 probe7(0)  => gbxf_empty ,
+--		 probe8(0)  => gbxf_prog_empty       ,
+--		 probe9(0)  => '0');
+
+	--TEST>
+	
+	gen_DECIMATION_RATE_sync : process(rxusrclk2)
+	begin
+        if (rising_edge(rxusrclk2))then	   
+            DECIMATION_RATE_z <= DECIMATION_RATE;
+            DECIMATION_RATE_z2 <= DECIMATION_RATE_z;
+            DECIMATION_RATE_sync <= DECIMATION_RATE_z2;	       
+        end if;	
+	end process;
+    	
+    EXT_D2_BYPASS_async <= '0' when (DECIMATION_RATE = "11") else '1';
+    
+    tff_ext_d2_bypass : tff
+    port map(
+        clk    => ADC_DATA_CLOCK,
+        async  => EXT_D2_BYPASS_async,
+        synced => EXT_D2_BYPASS);
+    
 	----------------------------------------------
 	-- RESET CONTROL
 	----------------------------------------------
@@ -984,8 +1062,12 @@ begin
 						k28p5det_valid(i) <= '0';
 					end if;
 				end loop;
+
 				-- After counting 2048 (128 x 4 x 4) K28.5 comma characters, assert the k28p5det_done signal
-				if k28p5det_valid = x"F" then
+				if (((k28p5det_valid = x"F")and(DECIMATION_RATE_sync = "00"))or -- DEC 4
+				((k28p5det_valid(1 downto 0) = "11")and(DECIMATION_RATE_sync = "01"))or -- DEC 8
+				((k28p5det_valid(1) = '1')and(DECIMATION_RATE_sync(1) = '1')))then -- DEC 16 or DEC 32
+				
 					if k28p5det_cnt < 128 then
 						k28p5det_cnt <= k28p5det_cnt + 1;
 					else
@@ -1029,7 +1111,7 @@ begin
 				chbnd_detk28p3_z2  <= "0000";
 				chbnd_done         <= '0';
 				chbnd_done_z1      <= '0';
-				chbnd_plsfreq_cnt  <= (others => "1000"); -- 8
+				chbnd_plsfreq_cnt  <= (others => "100000"); -- 32
 				chbnd_plsfreq_err  <= "0000";
 				chbnd_plsnum_cnt   <= (others => "000");
 				chbnd_plsnum_err   <= "0000";
@@ -1049,7 +1131,9 @@ begin
 					end loop;
 					
 					-- Data valid assertion
-					if (chbnd_datval = X"F") then
+					if (((chbnd_datval = X"F")and(DECIMATION_RATE_sync = "00"))or -- DEC 4
+					((chbnd_datval(1 downto 0) = "11")and(DECIMATION_RATE_sync = "01"))or -- DEC 8
+					((chbnd_datval(1) = '1')and(DECIMATION_RATE_sync(1) = '1')))then -- DEC 16 or DEC 32
 						chbnd_done <= '1';
 					else
 						chbnd_done <= '0';
@@ -1076,15 +1160,15 @@ begin
 					-- Check for k28p3 frequency errors
 					for i in 0 to 3 loop
 						if chbnd_detk28p3_z1(i) = '1' then
-							chbnd_plsfreq_cnt(i) <= to_unsigned(0, 4);
+							chbnd_plsfreq_cnt(i) <= to_unsigned(0, 6);
 						else
-							if chbnd_plsfreq_cnt(i) <= 7 then -- count up to 8
+							if chbnd_plsfreq_cnt(i) <= 31 then -- count up to 8
 								chbnd_plsfreq_cnt(i) <= chbnd_plsfreq_cnt(i) + 1;
 							end if;
 						end if;
 						if chbnd_detk28p3_z1(i) = '1' then
 							if chbnd_plsnum_cnt(i) >= 1 then
-								if chbnd_plsfreq_cnt(i) /= 7 then
+								if chbnd_plsfreq_cnt(i) /= 31 then
 									chbnd_plsfreq_err(i) <= '1';
 								end if;
 							end if;
@@ -1188,7 +1272,9 @@ begin
 					end loop;
 					
 					-- Assert walgn_done if word alignment is completed on all lanes
-					if walgn_ptr_set = x"F" then
+					if (((walgn_ptr_set = x"F")and(DECIMATION_RATE_sync = "00"))or -- DEC 4
+					((walgn_ptr_set(1 downto 0) = "11")and(DECIMATION_RATE_sync = "01"))or -- DEC 8
+					((walgn_ptr_set(1) = '1')and(DECIMATION_RATE_sync(1) = '1')))then -- DEC 16 or DEC 32
 						walgn_done <= '1';
 					else
 						walgn_done <= '0';
@@ -1209,12 +1295,133 @@ begin
 	----------------------------------------------
 	-- DATA UNFRAMING
 	----------------------------------------------
-	-- CONNECTIONS
-	unfrm_128bdat <= walgn_algndat(3)(23 downto 16) & walgn_algndat(3)(31 downto 24) & walgn_algndat(1)(23 downto 16) & walgn_algndat(1)(31 downto 24) &
-					 walgn_algndat(2)(23 downto 16) & walgn_algndat(2)(31 downto 24) & walgn_algndat(0)(23 downto 16) & walgn_algndat(0)(31 downto 24) &
-					 walgn_algndat(3)(7 downto 0)   & walgn_algndat(3)(15 downto 8)  & walgn_algndat(1)(7 downto 0)   & walgn_algndat(1)(15 downto 8)  &
-					 walgn_algndat(2)(7 downto 0)   & walgn_algndat(2)(15 downto 8)  & walgn_algndat(0)(7 downto 0)   & walgn_algndat(0)(15 downto 8);
 	unfrm_done <= walgn_done;
+    		
+	gen_unfrm_128count : process(rxusrclk2)
+	begin
+        if (rising_edge(rxusrclk2))then
+            if (walgn_done = '0')then
+                unfrm_128count <= 0;
+            else	
+                if ((DECIMATION_RATE_sync = "00")or -- DEC 4
+                ((DECIMATION_RATE_sync = "01")and(unfrm_128count = 1))or -- DEC 8
+                ((DECIMATION_RATE_sync(1) = '1')and(unfrm_128count = 3)))then -- DEC 16 or DEC 32
+                    unfrm_128count <= 0;
+                else
+                    unfrm_128count <= unfrm_128count + 1;
+                end if;	           
+            end if;	
+        end if;	   
+	end process;
+	
+    gen_unfrm_128bdat_temp : process(rxusrclk2)
+    begin
+        if (rising_edge(rxusrclk2))then       
+            if (walgn_done = '0')then
+                unfrm_128bdat <= (others => '0');
+                unfrm_128bdat_wrreq <= '0';
+            else    
+            	if (DECIMATION_RATE_sync = "11") then
+                    unfrm_128bdat(31 downto 0) <=  walgn_algndat(1)(23 downto 16) & walgn_algndat(1)(31 downto 24) & walgn_algndat(1)(7 downto 0) & walgn_algndat(1)(15 downto 8);
+                    unfrm_128bdat_wrreq <= '1';
+            	else
+	                unfrm_128bdat_wrreq <= '0';
+	                case unfrm_128count is
+	                    when 0 =>
+	                    if (DECIMATION_RATE_sync = "00")then
+	                        unfrm_128bdat <= walgn_algndat(3)(23 downto 16) & walgn_algndat(3)(31 downto 24) & walgn_algndat(1)(23 downto 16) & walgn_algndat(1)(31 downto 24) &
+	                            walgn_algndat(2)(23 downto 16) & walgn_algndat(2)(31 downto 24) & walgn_algndat(0)(23 downto 16) & walgn_algndat(0)(31 downto 24) &
+	                            walgn_algndat(3)(7 downto 0)   & walgn_algndat(3)(15 downto 8)  & walgn_algndat(1)(7 downto 0)   & walgn_algndat(1)(15 downto 8)  &
+	                            walgn_algndat(2)(7 downto 0)   & walgn_algndat(2)(15 downto 8)  & walgn_algndat(0)(7 downto 0)   & walgn_algndat(0)(15 downto 8);                    
+	                        unfrm_128bdat_wrreq <= '1';
+	                    elsif (DECIMATION_RATE_sync = "01")then
+	                        unfrm_128bdat(63 downto 32) <= walgn_algndat(1)(23 downto 16) & walgn_algndat(1)(31 downto 24) & walgn_algndat(0)(23 downto 16) & walgn_algndat(0)(31 downto 24);        	   
+	                        unfrm_128bdat(31 downto 0) <= walgn_algndat(1)(7 downto 0) & walgn_algndat(1)(15 downto 8) & walgn_algndat(0)(7 downto 0) & walgn_algndat(0)(15 downto 8);               
+	                    else
+	                        unfrm_128bdat(31 downto 0) <=  walgn_algndat(1)(23 downto 16) & walgn_algndat(1)(31 downto 24) & walgn_algndat(1)(7 downto 0) & walgn_algndat(1)(15 downto 8);
+	                    end if;               
+
+	                    when 1 =>
+	                    if (DECIMATION_RATE_sync = "01")then
+	                        unfrm_128bdat(127 downto 96) <= walgn_algndat(1)(23 downto 16) & walgn_algndat(1)(31 downto 24) & walgn_algndat(0)(23 downto 16) & walgn_algndat(0)(31 downto 24);        	   
+	                        unfrm_128bdat(95 downto 64) <= walgn_algndat(1)(7 downto 0) & walgn_algndat(1)(15 downto 8) & walgn_algndat(0)(7 downto 0) & walgn_algndat(0)(15 downto 8);               
+	                        unfrm_128bdat_wrreq <= '1';
+	                    else
+	                        unfrm_128bdat(63 downto 32) <=  walgn_algndat(1)(23 downto 16) & walgn_algndat(1)(31 downto 24) & walgn_algndat(1)(7 downto 0) & walgn_algndat(1)(15 downto 8);
+	                    end if;
+	                    
+	                    when 2 =>
+	                    unfrm_128bdat(95 downto 64) <=  walgn_algndat(1)(23 downto 16) & walgn_algndat(1)(31 downto 24) & walgn_algndat(1)(7 downto 0) & walgn_algndat(1)(15 downto 8);
+	            
+	                    when 3 =>
+	                    unfrm_128bdat(127 downto 96) <=  walgn_algndat(1)(23 downto 16) & walgn_algndat(1)(31 downto 24) & walgn_algndat(1)(7 downto 0) & walgn_algndat(1)(15 downto 8);
+	                    unfrm_128bdat_wrreq <= '1';
+
+	                end case;
+
+            	end if;
+            end if;           
+        end if;    
+    end process;
+
+	----------------------------------------------
+	-- DEC 16 to 32 FIR FILTER 
+	----------------------------------------------
+	G_DEC16TO32_FIR_FILTER : if ENABLE_DEC32 = 1 generate
+		d16to32fir_rstn    <= rctrl_rstdone;
+		d16to32fir_din     <= unfrm_128bdat(31 downto 0);
+		d16to32fir_din_val <= unfrm_128bdat_wrreq;
+		dec16to32_fir_filter_i : dec16to32_fir_filter port map (
+			aresetn            => d16to32fir_rstn,
+			aclk               => rxusrclk2, 
+			s_axis_data_tvalid => d16to32fir_din_val,
+			s_axis_data_tready => open, 
+			s_axis_data_tdata  => d16to32fir_din,
+			m_axis_data_tvalid => d16to32fir_dout_val,
+			m_axis_data_tdata  => d16to32fir_dout);
+	end generate;
+	
+	----------------------------------------------
+	-- DEC 32 RETIMING
+	----------------------------------------------
+	G_DEC32_RETIMING : if ENABLE_DEC32 = 1 generate
+		d32ret_rstn <= rctrl_rstdone;
+		process (rxusrclk2)
+		begin
+			if (rising_edge(rxusrclk2)) then
+				if (d32ret_rstn = '0') then 
+					d32ret_cnt      <= 0;
+					d32ret_dout_val <= '0';
+					d32ret_dout     <= (others => '0');
+				else
+					if d16to32fir_dout_val = '1' and d32ret_cnt = 3 then
+						d32ret_dout_val <= '1';
+					else
+						d32ret_dout_val <= '0';
+					end if;
+
+					if d16to32fir_dout_val = '1' then
+						case d32ret_cnt is
+							when 0 =>
+								d32ret_dout(31  downto 0)  <= d16to32fir_dout(39 downto 24) & d16to32fir_dout(15 downto 0);
+							when 1 =>
+								d32ret_dout(63  downto 32) <= d16to32fir_dout(39 downto 24) & d16to32fir_dout(15 downto 0);
+							when 2 =>
+								d32ret_dout(95  downto 64) <= d16to32fir_dout(39 downto 24) & d16to32fir_dout(15 downto 0);
+							when 3 =>
+								d32ret_dout(127 downto 96) <= d16to32fir_dout(39 downto 24) & d16to32fir_dout(15 downto 0);
+						end case;
+
+						if d32ret_cnt < 3 then
+							d32ret_cnt <= d32ret_cnt + 1;
+						else
+							d32ret_cnt <= 0;
+						end if;
+					end if;
+				end if;
+			end if;
+		end process;
+	end generate;
 
 	----------------------------------------------
 	-- FIFO
@@ -1225,8 +1432,10 @@ begin
 	del_gbxf_rst_async : del port map (drpsysclk, gbxf_rst_async,    gbxf_rst_async_z1);
 	tff_gbxf_rst       : tff port map (rxusrclk2, gbxf_rst_async_z1, gbxf_rst);
 	-- Data in
-	gbxf_din  <= unfrm_128bdat;
-	gbxf_wren <= unfrm_done and (not gbxf_full);
+	gbxf_din  <= d32ret_dout when DECIMATION_RATE_sync = "11" else 
+	             unfrm_128bdat;
+	gbxf_wren <= d32ret_dout_val     and (not gbxf_full) when DECIMATION_RATE_sync = "11" else
+	             unfrm_128bdat_wrreq and (not gbxf_full);
 	-- Data out
 	gbxf_rden_out_i <= not gbxf_prog_empty;
 	process (adcdatclk)
@@ -1285,14 +1494,14 @@ begin
 	process (rxusrclk2)
 	begin
 		if rising_edge(rxusrclk2) then
-			if rphy_rxbufstatus     = x"000"  then stat_rxbufstatus_async     <= '0'; else stat_rxbufstatus_async     <= '1'; end if;
-			if rphy_rxdisperr       = x"0000" then stat_rxdisperr_async       <= '0'; else stat_rxdisperr_async       <= '1'; end if;
-			if rphy_rxnotintable    = x"0000" then stat_rxnotintable_async    <= '0'; else stat_rxnotintable_async    <= '1'; end if;
-			if rphy_rxbyteisaligned = x"F"    then stat_rxbyteisaligned_async <= '0'; else stat_rxbyteisaligned_async <= '1'; end if;
+			if rphy_rxbufstatus(5 downto 3)  = "000"  then stat_rxbufstatus_async     <= '0'; else stat_rxbufstatus_async     <= '1'; end if;
+			if rphy_rxdisperr(7 downto 4)    = "0000" then stat_rxdisperr_async       <= '0'; else stat_rxdisperr_async       <= '1'; end if;
+			if rphy_rxnotintable(7 downto 4) = "0000" then stat_rxnotintable_async    <= '0'; else stat_rxnotintable_async    <= '1'; end if;
+			if rphy_rxbyteisaligned(1) = '1'  then stat_rxbyteisaligned_async <= '0'; else stat_rxbyteisaligned_async <= '1'; end if;
 		end if;
 	end process;
-	stat_rxfsmresetdone_async     <= '0' when rphy_rxfsmresetdone   = "1111"  else '1';
-	stat_cplllock_async           <= '0' when rphy_cplllock         = x"F"    else '1';
+	stat_rxfsmresetdone_async     <= '0' when rphy_rxfsmresetdone(1) = '1' else '1';
+	stat_cplllock_async           <= '0' when rphy_cplllock(1)       = '1' else '1';
 	tff_rxfsmresetdone   : tff port map (drpsysclk, stat_rxfsmresetdone_async,   stat_rxfsmresetdone  );
 	tff_rxbufstatus      : tff port map (drpsysclk, stat_rxbufstatus_async,      stat_rxbufstatus     );
 	tff_rxdisperr        : tff port map (drpsysclk, stat_rxdisperr_async,        stat_rxdisperr       );
@@ -1323,10 +1532,10 @@ begin
 	process (rxusrclk2)
 	begin
 		if rising_edge(rxusrclk2) then
-			if chbnd_plswidth_err = x"0" then stat_chbnd_plswidth_err_async <= '0'; else stat_chbnd_plswidth_err_async <= '1'; end if;
-			if chbnd_plsfreq_err  = x"0" then stat_chbnd_plsfreq_err_async  <= '0'; else stat_chbnd_plsfreq_err_async  <= '1'; end if;
-			if chbnd_plsnum_err   = x"0" then stat_chbnd_plsnum_err_async   <= '0'; else stat_chbnd_plsnum_err_async   <= '1'; end if;
-			if chbnd_datval       = x"F" then stat_chbnd_datval_async       <= '0'; else stat_chbnd_datval_async       <= '1'; end if;
+			if chbnd_plswidth_err(1) = '0' then stat_chbnd_plswidth_err_async <= '0'; else stat_chbnd_plswidth_err_async <= '1'; end if;
+			if chbnd_plsfreq_err(1)  = '0' then stat_chbnd_plsfreq_err_async  <= '0'; else stat_chbnd_plsfreq_err_async  <= '1'; end if;
+			if chbnd_plsnum_err(1)   = '0' then stat_chbnd_plsnum_err_async   <= '0'; else stat_chbnd_plsnum_err_async   <= '1'; end if;
+			if chbnd_datval(1)       = '1' then stat_chbnd_datval_async       <= '0'; else stat_chbnd_datval_async       <= '1'; end if;
 		end if;
 	end process;
 	tff_chbnd_plswidth_err : tff port map (drpsysclk, stat_chbnd_plswidth_err_async, stat_chbnd_plswidth_err);
@@ -1342,8 +1551,8 @@ begin
 	process (rxusrclk2)
 	begin
 		if rising_edge(rxusrclk2) then
-			if chbfifo_full  = x"0" then stat_chbfifo_full_async  <= '0'; else stat_chbfifo_full_async  <= '1'; end if;
-			if chbfifo_empty = x"0" then stat_chbfifo_empty_async <= '0'; else stat_chbfifo_empty_async <= '1'; end if;
+			if chbfifo_full(1)  = '0' then stat_chbfifo_full_async  <= '0'; else stat_chbfifo_full_async  <= '1'; end if;
+			if chbfifo_empty(1) = '0' then stat_chbfifo_empty_async <= '0'; else stat_chbfifo_empty_async <= '1'; end if;
 		end if;
 	end process;
 	tff_chbfifo_full  : tff port map (drpsysclk, stat_chbfifo_full_async , stat_chbfifo_full );
@@ -1404,22 +1613,25 @@ begin
 	STATUS_O(5 ) <= stat_rxdisperr_l;
 	STATUS_O(6 ) <= stat_rxnotintable_l;
 	STATUS_O(7 ) <= '0';
+
 	STATUS_O(8 ) <= stat_rxbyteisaligned_l;
 	STATUS_O(9 ) <= stat_cplllock_l;
 	STATUS_O(10) <= '0';
 	STATUS_O(11) <= '0';
 	STATUS_O(12) <= stat_rctrl_apll_locked_l;
 	STATUS_O(13) <= stat_chbnd_plswidth_err_l;
-	STATUS_O(14) <= stat_chbnd_plsfreq_err_l;
+	STATUS_O(14) <= '0'; --stat_chbnd_plsfreq_err_l;
 	STATUS_O(15) <= stat_chbnd_plsnum_err_l;
+
 	STATUS_O(16) <= stat_chbnd_datval_l;
 	STATUS_O(17) <= stat_chbfifo_full_l;
 	STATUS_O(18) <= stat_chbfifo_empty_l;
-	STATUS_O(19) <= stat_walgn_error;
+	STATUS_O(19) <= '0'; -- stat_walgn_error;
 	STATUS_O(20) <= stat_gbxf_full;
 	STATUS_O(21) <= stat_gbxf_empty;
 	STATUS_O(22) <= stat_gbxf_prog_empty;
 	STATUS_O(23) <= stat_rctrl_rstdone;
+
 	STATUS_O(24) <= stat_k28p5det_done;
 	STATUS_O(25) <= stat_chbnd_done;
 	STATUS_O(26) <= stat_walgn_done_z1;

@@ -1,0 +1,2 @@
+EMB124901U8R2_BYP.bin version: 2.2
+EMB124901U8R2_DDC.bin version: 2.2

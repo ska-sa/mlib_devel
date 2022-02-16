@@ -152,6 +152,10 @@ channels_ddc_centre_freq = 1000000000 # Other options: 400000000; etc
 # 2.8 SET THE CHANNELS (0 TO 3) THAT SHOULD BE INCLUDED IN TEST
 channels_to_test = [0, 1, 2, 3] # Other options: [0]; [0, 2]; etc
 
+# 2.9 SET THE DECIMATION RATE (ONLY APPLICABLE WHEN USING THE DDC
+#     BANDWIDTH MODE)
+decimation_ratio = 4 # Other options: 8; 16, 32
+
 # -----------------------------------------------------------------
 # 3. CONNECT TO SKARAB HARDWARE AND UPLOAD FPG FILE
 # -----------------------------------------------------------------
@@ -240,7 +244,19 @@ if skarab_adc_num > 1:
 yb_type = skarab_adcs[0].yb_type
 
 # -----------------------------------------------------------------
-# 6. CONFIGURE SKARAB ADC BOARD
+# 6. DISABLE DATA OUTPUT OF SKARAB ADC YELLOW BLOCK
+# - This is required in case the Yellow Block is already providing 
+#   sample data due to previous execution of this script (and the fpg 
+#   file is not re-uploaded). In this case, the the data output 
+#   should only be enabled after the Snapshot Block Capture components 
+#   are armed and the Yellow Block is reset, but, before a 
+#   synchronised capture is performed.
+# -----------------------------------------------------------------
+for i in range(skarab_adc_num):
+	skarab_adcs[i].enable_skarab_adc_dout(False)
+
+# -----------------------------------------------------------------
+# 7. CONFIGURE SKARAB ADC BOARD
 # - Note that the configure_skarab_adc function automatically 
 #   determines the bandwidth (sampling) mode for which the SKARAB   
 #   ADC board(s) need to be configured based on the specific SKARAB   
@@ -253,17 +269,17 @@ print("SETTING UP SKARAB ADC(s)")
 print("------------------------")
 print("Configuring SKARAB ADC boards...")
 for i in range(skarab_adc_num):
-	skarab_adcs[i].configure_skarab_adc(nyquist_zone)
+	skarab_adcs[i].configure_skarab_adc(nyquist_zone, decimation_ratio)
 
 # -----------------------------------------------------------------
-# 7. SET DATA MODE
+# 8. SET DATA MODE
 # -----------------------------------------------------------------
 print("Setting data mode of SKARAB ADC boards...")
 for i in range(skarab_adc_num):
 	skarab_adcs[i].set_skarab_adc_data_mode(data_mode)
 
 # -----------------------------------------------------------------
-# 8. SET CHANNEL GAIN
+# 9. SET CHANNEL GAIN
 # -----------------------------------------------------------------
 print("Setting channel gain of SKARAB ADC boards...")
 for i in range(skarab_adc_num):
@@ -271,7 +287,7 @@ for i in range(skarab_adc_num):
 		skarab_adcs[i].set_skarab_adc_channel_gain(j, channels_gain[j])
 
 # -----------------------------------------------------------------
-# 9. SET DDC FREQUENCY
+# 10. SET DDC FREQUENCY
 # - Note that the DDCs are tuned to 1 GHz by default, and 
 #   thus, it is not required to run this function to set it 
 #   again if this is already the desired DDC frequency.
@@ -284,15 +300,8 @@ if yb_type == sd.YB_SKARAB_ADC4X3G_14:
 			actual_channels_ddc_centre_freq = skarab_adcs[i].configure_skarab_adc_ddcs(j, channels_ddc_centre_freq)[0]
 
 # -----------------------------------------------------------------
-# 10. RESET ALL SNAPSHOT BLOCK CAPTURE COMPONENTS
+# 11. ARM ALL SNAPSHOT BLOCK CAPTURE COMPONENTS
 # -----------------------------------------------------------------
-# 10.1 IF THE USER IP CLOCK SOURCE IS SET TO SYS_CLK, RESET THE 
-#      SKARAB ADC BOARDS BEFORE ARMING SNAPSHOT COMPONENTS
-if user_ip_clock_source == 'sys_clk':
-	for i in range(skarab_adc_num):
-		skarab_adcs[i].reset_skarab_adc()
-
-# 10.2 ARM ALL SNAPSHOT BLOCK CAPTURE COMPONENTS
 for i in range(skarab_num):
 	skarabs[i].write_int('clr_bc', 1)
 	skarabs[i].write_int('clr_bc', 0)
@@ -300,14 +309,23 @@ for i in range(skarab_num):
 		if "adc" in snapshot.name:
 			snapshot.arm()
 
-# 10.3 IF THE USER IP CLOCK SOURCE IS SET TO ADC_CLK, RESET THE 
-#      SKARAB ADC BOARDS AFTER ARMING SNAPSHOT COMPONENTS
-if user_ip_clock_source == 'adc_clk':
-	for i in range(skarab_adc_num):
-		skarab_adcs[i].reset_skarab_adc()
+# -----------------------------------------------------------------
+# 12. RESET THE SKARAB ADC BOARDS
+# -----------------------------------------------------------------
+for i in range(skarab_adc_num):
+	skarab_adcs[i].reset_skarab_adc()
 
 # -----------------------------------------------------------------
-# 11. PERFORM A SYNCHRONISED CAPTURE
+# 13. ENABLE DATA OUTPUT OF SKARAB ADC YELLOW BLOCK
+# - Now that the Snapshot Block Capture components are armed and 
+#   the Yellow Block is reset, the data output is enabled
+#   before the synchronised capture is performed.
+# -----------------------------------------------------------------
+for i in range(skarab_adc_num):
+	skarab_adcs[i].enable_skarab_adc_dout(True)
+
+# -----------------------------------------------------------------
+# 14. PERFORM A SYNCHRONISED CAPTURE
 # -----------------------------------------------------------------
 print("")
 print("----------------")
@@ -316,7 +334,7 @@ print("----------------")
 skarab_adcs[0].sync_skarab_adc(skarab_adc_slaves)
 
 # -----------------------------------------------------------------
-# 12. PRINT TEST PARAMETERS
+# 15. PRINT TEST PARAMETERS
 # -----------------------------------------------------------------
 print("")
 print("---------------")
@@ -336,7 +354,7 @@ print(str("SKARAB ADC Yellow Block Names: " + str(skarab_adc_yb_names).strip('[]
 print(str("SKARAB ADC Mezzanine Sites: " + str(skarab_mez_sites).strip('[]')))
 
 if yb_type == sd.YB_SKARAB_ADC4X3G_14:
-	print("SKARAB ADC Yellow Block type: 3 GHz, dec-by-4, DDC mode (YB_SKARAB_ADC4X3G_14)")
+	print("SKARAB ADC Yellow Block type: 3 GHz, DDC mode (YB_SKARAB_ADC4X3G_14)")
 elif yb_type == sd.YB_SKARAB_ADC4X3G_14_BYP:
 	print("SKARAB ADC Yellow Block type: 2.8 GHz, full-bandwidth   (YB_SKARAB_ADC4X3G_14_BYP)")
 
@@ -367,7 +385,7 @@ elif nyquist_zone == sd.SECOND_NYQ_ZONE:
 	print("Nyquist zone optimisation: Second")
 
 # -----------------------------------------------------------------
-# 13. GET SYNCHRONISED SAMPLE DATA FROM SNAPSHOT BLOCK CAPTURE
+# 16. GET SYNCHRONISED SAMPLE DATA FROM SNAPSHOT BLOCK CAPTURE
 #     COMPONENTS
 # -----------------------------------------------------------------
 sample_data_array_i = []
@@ -435,7 +453,7 @@ for skarab_index in range(skarab_num):
 			sample_data_arrays_num = sample_data_arrays_num + 1
 
 # -----------------------------------------------------------------
-# 14. WRITE CAPTURED ADC DATA TO FILES
+# 17. WRITE CAPTURED ADC DATA TO FILES
 # - Note that the sample values are floating point values 
 #   that vary from -1.0 to 1.0 
 # -----------------------------------------------------------------
@@ -456,7 +474,7 @@ elif yb_type == sd.YB_SKARAB_ADC4X3G_14_BYP:
 		adc_samples_file.close()
 
 # -----------------------------------------------------------------
-# 15. PRINT TEST FOOTER
+# 18. PRINT TEST FOOTER
 # -----------------------------------------------------------------
 print("----------------------------------------------")
 print("SKARAB ADC SYNCHRONISED SAMPLING TEST COMPLETE")

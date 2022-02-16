@@ -46,6 +46,9 @@ for i =1:length(gateway_ins)
     elseif regexp(get_param(gw, 'Name'), '(adc3_data_out)$')
         toks = regexp(get_param(gw, 'Name'), '(adc3_data_out)$', 'tokens');
         set_param(gw, 'Name', clear_name([myname, '_', toks{1}{1}]));	
+    elseif regexp(get_param(gw, 'Name'), '(ext_d2_bypass)$')
+        toks = regexp(get_param(gw, 'Name'), '(ext_d2_bypass)$', 'tokens');
+        set_param(gw, 'Name', clear_name([myname, '_', toks{1}{1}]));
 %    elseif regexp(get_param(gw, 'Name'), '(pll_sync_complete_out)$')
 %        toks = regexp(get_param(gw, 'Name'), '(pll_sync_complete_out)$', 'tokens');
 %        set_param(gw, 'Name', clear_name([myname, '_', toks{1}{1}]));	

@@ -29,7 +29,8 @@ use unisim.vcomponents.all;
 entity SKARAB_ADC4x3G_14 is
 	generic (
 		ADC_SYNC_MASTER : integer := 1;
-		ADC_SYNC_SLAVE  : integer := 0);
+		ADC_SYNC_SLAVE  : integer := 0;
+		ENABLE_DEC32    : integer := 0);
 	port(
 		wb_clk_i : in  std_logic;
 		wb_rst_i : in  std_logic;
@@ -82,6 +83,8 @@ entity SKARAB_ADC4x3G_14 is
         ADC3_DATA_VAL_OUT : out std_logic;
         ADC3_DATA_OUT : out std_logic_vector(127 downto 0);
 
+        --EXT_D2_BYPASS : out std_logic;
+
 		-- ADC_SYNC_START_IN : in std_logic;
 		-- ADC_SYNC_PART2_START_IN : in std_logic;
 		-- ADC_SYNC_PART3_START_IN : in std_logic;
@@ -116,11 +119,13 @@ end SKARAB_ADC4x3G_14;
 
 architecture arch_SKARAB_ADC4x3G_14 of SKARAB_ADC4x3G_14 is
 
-	constant C_ADC_AXIS_TDATA_WIDTH : integer := 128;
+	constant C_ADC_AXIS_TDATA_WIDTH : integer                      := 128;
+	constant c_adc_sync_offset      : std_logic_vector(3 downto 0) := "1000";
 	
 	component ADC32RF45_7G5_DEC4_RX is
 	generic(
-		RX_POLARITY_INVERT : std_logic_vector(3 downto 0) := "0000"); 
+		RX_POLARITY_INVERT : std_logic_vector(3 downto 0) := "0000";
+		ENABLE_DEC32       : integer := 0);
 	port(
 		SYS_CLK_I        : in  std_logic;
 		SYS_RST_I        : in  std_logic;
@@ -138,7 +143,10 @@ architecture arch_SKARAB_ADC4x3G_14 of SKARAB_ADC4x3G_14 is
 		ADC_PLL_LOCKED   : in  std_logic;
 		STATUS_O         : out std_logic_vector(31 downto 0);
 		GBXF_RDEN_OUT    : out std_logic;
-		GBXF_RDEN_IN     : in  std_logic);
+		GBXF_RDEN_IN     : in  std_logic;
+		DECIMATION_RATE  : in  std_logic_vector(1 downto 0); -- 00 = DEC 4, 01 = DEC 8, 10 = DEC 16, 11 = DEC 16 and EXT_D2_BYPASS = 0
+		EXT_D2_BYPASS    : out std_logic -- 0 = INCLUDE EXTERNAL DEC 2 (COMBINE WITH DEC 16 FOR DEC 32), 1 = BYPASS EXTERNAL DEC 2
+		);
 	end component;
 
 	component multi_skarab_adc_pll_sync_generator is
@@ -147,6 +155,7 @@ architecture arch_SKARAB_ADC4x3G_14 of SKARAB_ADC4x3G_14 is
 		reset                     : in  std_logic;
 		adc_sysref_clk            : in  std_logic;
 		adc_reference_input_clk   : in  std_logic;
+		adc_sync_offset           : in  std_logic_vector(3 downto 0); -- GT 15/9/2021 PROVIDE PROGRAMMABLE CONTROL OVER LOCATION OF ADC SYNC
 		adc_sync_start            : in  std_logic;
 		adc_sync_part2_start      : in  std_logic;
 		adc_sync_part3_start      : in  std_logic;
@@ -293,6 +302,8 @@ architecture arch_SKARAB_ADC4x3G_14 of SKARAB_ADC4x3G_14 is
 	constant REGADR_RD_PLL_SYNC_COMPLETE    : std_logic_vector(7 downto 0) := x"2C";
 	constant REGADR_RD_ADC_SYNC_REQUEST     : std_logic_vector(7 downto 0) := x"30";
 	constant REGADR_WR_RESET_CORE           : std_logic_vector(7 downto 0) := x"34";
+	constant REGADR_WR_DECIMATION_RATE      : std_logic_vector(7 downto 0) := x"38";
+	constant REGADR_WR_ENABLE_DOUT          : std_logic_vector(7 downto 0) := x"3C";
 	-- REGISTERS
 	signal wb_ack_o_i                  : std_logic                     := '0';
 	signal wb_dat_o_reg                : std_logic_vector(31 downto 0) := x"00000000";
@@ -303,6 +314,8 @@ architecture arch_SKARAB_ADC4x3G_14 of SKARAB_ADC4x3G_14 is
 	signal wb_reg_pll_pulse_gen_start  : std_logic                     := '0';
 	signal wb_reg_pll_sync_start       : std_logic                     := '0';
 	signal wb_reg_reset_core           : std_logic                     := '0';
+	signal wb_reg_decimation_rate      : std_logic_vector(1 downto 0)  := "00";
+	signal wb_reg_enable_dout          : std_logic                     := '0';
 	signal wb_stb_i_z                  : std_logic                     := '0';
 	signal wb_stb_i_z2                 : std_logic                     := '0';
 	-- CONNECTIONS
@@ -328,6 +341,13 @@ architecture arch_SKARAB_ADC4x3G_14 of SKARAB_ADC4x3G_14 is
 	signal pll_sync_start_in_synced_i       : std_logic;
 	signal pll_pulse_gen_start_in_synced_i  : std_logic;
 	signal mezzanine_reset_i                : std_logic;
+
+	signal enable_dout : std_logic;
+
+	signal ADC0_DATA_VAL_OUT_i : std_logic;
+	signal ADC1_DATA_VAL_OUT_i : std_logic;
+	signal ADC2_DATA_VAL_OUT_i : std_logic;
+	signal ADC3_DATA_VAL_OUT_i : std_logic;
 	
 begin
 
@@ -357,6 +377,8 @@ begin
 			wb_reg_pll_pulse_gen_start  <= '0';
 			wb_reg_pll_sync_start       <= '0';
 			wb_reg_reset_core           <= '0';
+			wb_reg_decimation_rate      <= "00";
+			wb_reg_enable_dout          <= '0';
 			wb_stb_i_z                  <= '0';
 			wb_stb_i_z2                 <= '0';
 		elsif (rising_edge(wb_clk_i))then
@@ -378,6 +400,10 @@ begin
 						wb_reg_mezzanine_reset <= wb_dat_i(0);
 					when REGADR_WR_RESET_CORE =>
 						wb_reg_reset_core <= wb_dat_i(0);
+					when REGADR_WR_DECIMATION_RATE =>
+						wb_reg_decimation_rate <= wb_dat_i(1 downto 0);
+					when REGADR_WR_ENABLE_DOUT =>
+						wb_reg_enable_dout <= wb_dat_i(0);
 					when others =>
 				end case;
 			end if;
@@ -505,6 +531,8 @@ begin
 	tff_wb_reg_reset_core           : tff port map (FREE_RUN_156M25HZ_CLK_IN, wb_reg_reset_core,           wb_reg_reset_core_async          );
 	tff_wb_reg_mezzanine_reset      : tff port map (DSP_CLK_IN,               wb_reg_mezzanine_reset,      wb_reg_mezzanine_reset_async     );
 
+	tff_wb_reg_enable_dout          : tff port map (DSP_CLK_IN,               wb_reg_enable_dout,          enable_dout     );
+
 	-- tff_adc_sync_complete_out   : tff port map (DSP_CLK_IN, adc_sync_complete_async,   ADC_SYNC_COMPLETE_OUT);
 	-- tff_adc_sync_request_out_0  : tff port map (DSP_CLK_IN, adc_sync_request_async(0), ADC_SYNC_REQUEST_OUT(0));
 	-- tff_adc_sync_request_out_1  : tff port map (DSP_CLK_IN, adc_sync_request_async(1), ADC_SYNC_REQUEST_OUT(1));
@@ -603,6 +631,7 @@ begin
 		reset                     => FREE_RUN_156M25HZ_RST_IN,
 		adc_sysref_clk            => adc_sysref_clk,
 		adc_reference_input_clk   => adc_reference_input_clk,
+		adc_sync_offset           => c_adc_sync_offset,
 		adc_sync_start            => adc_sync_start_in_synced_i,
 		adc_sync_part2_start      => adc_sync_part2_start_in_synced_i,
 		adc_sync_part3_start      => adc_sync_part3_start_in_synced_i,
@@ -657,7 +686,8 @@ begin
 	-- LANE ORDER: 0 to 0, 1 to 1, 2 to 2, 3 to 3
 	ADC32RF45_7G5_DEC4_RX_0 : ADC32RF45_7G5_DEC4_RX
 	generic map(
-		RX_POLARITY_INVERT => "1111")
+		RX_POLARITY_INVERT => "1111",
+		ENABLE_DEC32       => ENABLE_DEC32)
 	port map(
 		SYS_CLK_I        => FREE_RUN_156M25HZ_CLK_IN,
 		SYS_RST_I        => wb_reg_reset_core_async,
@@ -670,19 +700,22 @@ begin
 		GT_RXUSRCLK2_O   => adc_user_clk,
 		ADC_DATA_CLOCK   => DSP_CLK_IN,
 		ADC_DATA_OUT     => ADC0_DATA_OUT,
-		ADC_DATA_VAL_OUT => ADC0_DATA_VAL_OUT,
+		ADC_DATA_VAL_OUT => ADC0_DATA_VAL_OUT_i,
 		ADC_PLL_ARESET   => adc_pll_reset,
 		ADC_PLL_LOCKED   => adc_rx_reset_n,
 		STATUS_O         => adc0_status,
 		GBXF_RDEN_OUT    => adc0_gbxf_rden_out,
-		GBXF_RDEN_IN     => adc0_gbxf_rden_in);
+		GBXF_RDEN_IN     => adc0_gbxf_rden_in,
+		DECIMATION_RATE  => wb_reg_decimation_rate,
+		EXT_D2_BYPASS    => open); --EXT_D2_BYPASS);
 
 	-- ADC_MEZ_PHY12 IS ADC0 CHANNEL A 
 	-- NOTE: POLARITY IS NOT SWAPPED
 	-- LANE ORDER: 3 to 0, 2 to 1, 1 to 2, 0 to 3
 	ADC32RF45_7G5_DEC4_RX_1 : ADC32RF45_7G5_DEC4_RX
 	generic map(
-		RX_POLARITY_INVERT => "0000")
+		RX_POLARITY_INVERT => "0000",
+		ENABLE_DEC32       => ENABLE_DEC32)
 	port map(
 		SYS_CLK_I        => FREE_RUN_156M25HZ_CLK_IN,
 		SYS_RST_I        => wb_reg_reset_core_async,
@@ -695,19 +728,22 @@ begin
 		GT_RXUSRCLK2_O   => open,
 		ADC_DATA_CLOCK   => DSP_CLK_IN,
 		ADC_DATA_OUT     => ADC1_DATA_OUT,
-		ADC_DATA_VAL_OUT => ADC1_DATA_VAL_OUT,
+		ADC_DATA_VAL_OUT => ADC1_DATA_VAL_OUT_i,
 		ADC_PLL_ARESET   => open,
 		ADC_PLL_LOCKED   => adc_rx_reset_n,
 		STATUS_O         => adc1_status,
 		GBXF_RDEN_OUT    => adc1_gbxf_rden_out,
-		GBXF_RDEN_IN     => adc1_gbxf_rden_in);
+		GBXF_RDEN_IN     => adc1_gbxf_rden_in,
+		DECIMATION_RATE  => wb_reg_decimation_rate,
+		EXT_D2_BYPASS    => open);
 
 	-- ADC_MEZ_PHY21 IS ADC1 CHANNEL B
 	-- NOTE: POLARITY IS SWAPPED
 	-- LANE ORDER: 0 to 0, 1 to 1, 2 to 2, 3 to 3    
 	ADC32RF45_7G5_DEC4_RX_2 : ADC32RF45_7G5_DEC4_RX
 	generic map(
-		RX_POLARITY_INVERT => "1111")
+		RX_POLARITY_INVERT => "1111",
+		ENABLE_DEC32       => ENABLE_DEC32)
 	port map(
 		SYS_CLK_I        => FREE_RUN_156M25HZ_CLK_IN,
 		SYS_RST_I        => wb_reg_reset_core_async,
@@ -720,19 +756,22 @@ begin
 		GT_RXUSRCLK2_O   => open,
 		ADC_DATA_CLOCK   => DSP_CLK_IN,
 		ADC_DATA_OUT     => ADC2_DATA_OUT,
-		ADC_DATA_VAL_OUT => ADC2_DATA_VAL_OUT,
+		ADC_DATA_VAL_OUT => ADC2_DATA_VAL_OUT_i,
 		ADC_PLL_ARESET   => open,
 		ADC_PLL_LOCKED   => adc_rx_reset_n,
 		STATUS_O         => adc2_status,
 		GBXF_RDEN_OUT    => adc2_gbxf_rden_out,
-		GBXF_RDEN_IN     => adc2_gbxf_rden_in);
+		GBXF_RDEN_IN     => adc2_gbxf_rden_in,
+		DECIMATION_RATE  => wb_reg_decimation_rate,
+		EXT_D2_BYPASS    => open);
    
 	-- ADC_MEZ_PHY22 IS ADC1 CHANNEL A
 	-- NOTE: POLARITY IS NOT SWAPPED
 	-- LANE ORDER: 3 to 0, 2 to 1, 1 to 2, 0 to 3 
 	ADC32RF45_7G5_DEC4_RX_3 : ADC32RF45_7G5_DEC4_RX
 	generic map(
-		RX_POLARITY_INVERT => "0000")
+		RX_POLARITY_INVERT => "0000",
+		ENABLE_DEC32       => ENABLE_DEC32)
 	port map(
 		SYS_CLK_I        => FREE_RUN_156M25HZ_CLK_IN,
 		SYS_RST_I        => wb_reg_reset_core_async,
@@ -745,12 +784,14 @@ begin
 		GT_RXUSRCLK2_O   => open,
 		ADC_DATA_CLOCK   => DSP_CLK_IN,
 		ADC_DATA_OUT     => ADC3_DATA_OUT,
-		ADC_DATA_VAL_OUT => ADC3_DATA_VAL_OUT,
+		ADC_DATA_VAL_OUT => ADC3_DATA_VAL_OUT_i,
 		ADC_PLL_ARESET   => open,
 		ADC_PLL_LOCKED   => adc_rx_reset_n,
 		STATUS_O         => adc3_status,
 		GBXF_RDEN_OUT    => adc3_gbxf_rden_out,
-		GBXF_RDEN_IN     => adc3_gbxf_rden_in);
+		GBXF_RDEN_IN     => adc3_gbxf_rden_in,
+		DECIMATION_RATE  => wb_reg_decimation_rate,
+		EXT_D2_BYPASS    => open);
 	adc0_gbxf_rden_in       <= adc_gbxf_rden_out_anded;
 	adc1_gbxf_rden_in       <= adc_gbxf_rden_out_anded;
 	adc2_gbxf_rden_in       <= adc_gbxf_rden_out_anded;
@@ -758,6 +799,11 @@ begin
 	adc_gbxf_rden_out_anded <= adc0_gbxf_rden_out and adc1_gbxf_rden_out and adc2_gbxf_rden_out and adc3_gbxf_rden_out;
 	adc_rx_reset_n          <= not DSP_RST_IN;
 	adc_sync_request_async  <= adc_sync_in;
+
+	ADC0_DATA_VAL_OUT <= ADC0_DATA_VAL_OUT_i when enable_dout = '1' else '0';
+	ADC1_DATA_VAL_OUT <= ADC1_DATA_VAL_OUT_i when enable_dout = '1' else '0';
+	ADC2_DATA_VAL_OUT <= ADC2_DATA_VAL_OUT_i when enable_dout = '1' else '0';
+	ADC3_DATA_VAL_OUT <= ADC3_DATA_VAL_OUT_i when enable_dout = '1' else '0';
 
 -------------------------------------------------------------------------
 -- ADC PLL

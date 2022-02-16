@@ -22,6 +22,7 @@ class skarab_adc4x3g_14(YellowBlock):
         self.add_source('skarab_adc4x3g_14/adc_cdc_fifo/*.xci')
         self.add_source('skarab_adc4x3g_14/chbfifo/*.xci')
         self.add_source('skarab_adc4x3g_14/adc_pll2/*.xci')
+        self.add_source('skarab_adc4x3g_14/dec16to32_fir_filter/*.xci')
 
     def modify_top(self,top):
     
@@ -39,7 +40,13 @@ class skarab_adc4x3g_14(YellowBlock):
         else:
             inst.add_parameter('ADC_SYNC_MASTER', 0)
             inst.add_parameter('ADC_SYNC_SLAVE',  1)
-        
+
+        if self.dec_modes == "4,8,16,32":
+            inst.add_parameter('ENABLE_DEC32',  1)
+        else:
+            inst.add_parameter('ENABLE_DEC32',  0)
+            
+
         inst.add_wb_interface(regname=self.unique_name, mode='rw', nbytes=0x40)
         
         inst.add_port('FREE_RUN_156M25HZ_CLK_IN', signal='hmc_clk', dir='in')
@@ -77,6 +84,9 @@ class skarab_adc4x3g_14(YellowBlock):
         inst.add_port('ADC2_DATA_OUT',            signal='%s_adc2_data_out' % self.fullname,               dir='out' ,width=128) 
         inst.add_port('ADC3_DATA_VAL_OUT',        signal='%s_adc3_data_val_out' % self.fullname,           dir='out')
         inst.add_port('ADC3_DATA_OUT',            signal='%s_adc3_data_out' % self.fullname,               dir='out' ,width=128) 
+
+        #inst.add_port('EXT_D2_BYPASS',            signal='%s_ext_d2_bypass' % self.fullname,               dir='out')
+
         #inst.add_port('ADC_SYNC_START_IN',        signal='%s_adc_sync_start_in' % self.fullname,           dir='in' ) 
         #inst.add_port('ADC_SYNC_PART2_START_IN',  signal='%s_adc_sync_part2_start_in' % self.fullname,     dir='in')
         #inst.add_port('ADC_SYNC_PART3_START_IN',  signal='%s_adc_sync_part3_start_in' % self.fullname,     dir='in')
