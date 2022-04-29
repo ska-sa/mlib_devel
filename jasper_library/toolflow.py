@@ -1199,7 +1199,11 @@ class ToolflowBackend(object):
             #    SpartanChecksum when upload_to_ram()
             #   - Need to give it the chunk size being used in upload_to_ram
             #   - This alters how the SPARTAN calculates the checksum
-            flash_write_checksum = self.calculate_checksum_using_bitstream(
+
+            # bin file header identifier - '\xff' * 32
+            header_end_index = bitstream.find(b'\xff' * 32)
+            if not header_end_index:
+               flash_write_checksum = self.calculate_checksum_using_bitstream(
                 bitstream, packet_size=MAX_IMAGE_CHUNK_SIZE)
 
         # add the md5sums, checksum and ?quit to the extended info file
@@ -1209,7 +1213,8 @@ class ToolflowBackend(object):
             fh.write("?meta\t" + line)
             line = '77777\t77777\tmd5_bitstream\t' + md5_bitstream + '\n'
             fh.write("?meta\t" + line)
-            line = '77777\t77777\tflash_write_checksum\t' + \
+            if not header_end_index:
+               line = '77777\t77777\tflash_write_checksum\t' + \
                    str(flash_write_checksum) + '_' + str(MAX_IMAGE_CHUNK_SIZE) + '\n'
             fh.write("?meta\t" + line)
             fh.write('?quit\n')
