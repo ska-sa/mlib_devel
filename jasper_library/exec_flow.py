@@ -254,7 +254,6 @@ if __name__ == '__main__':
             hex_file = backend.hex_loc
             mcs_file = backend.mcs_loc
             prm_file = backend.prm_loc
-            bitstream = backend.bitstream_loc 
 
             backend.output_fpg = tf.frontend_target_base[:-4] + '_%d-%02d-%02d_%02d%02d.fpg' % (
                 tf.start_time.tm_year, tf.start_time.tm_mon, tf.start_time.tm_mday,
@@ -304,10 +303,7 @@ if __name__ == '__main__':
                                             backend.compile_dir)
                 os.system(mkbof_cmd)
                 print('Created %s/%s' % (backend.output_dir, backend.output_bof))
-                if platform.name == 'au50' or 'au280':
-                   backend.mkfpg(bitstream, backend.output_fpg)
-                else:
-                   backend.mkfpg(binary, backend.output_fpg)
+                backend.mkfpg(binary, backend.output_fpg)
                 print('Created %s/%s' % (backend.output_dir, backend.output_fpg))
 
             # Only generate the hex and mcs files if a golden image or multiboot image

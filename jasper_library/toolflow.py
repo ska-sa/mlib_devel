@@ -1403,8 +1403,6 @@ class VivadoBackend(ToolflowBackend):
                 self.compile_dir, self.project_name, self.project_name)
             self.prm_loc = '%s/%s/%s.runs/impl_1/top.prm' % (
                 self.compile_dir, self.project_name, self.project_name)
-            self.bitstream_loc = '%s/%s/%s.runs/impl_1/top.bit' % (
-                self.compile_dir, self.project_name, self.project_name)
 
         # if non-project mode is enabled
         else:
@@ -1415,8 +1413,6 @@ class VivadoBackend(ToolflowBackend):
             self.mcs_loc = '%s/%s/top.mcs' % (
                 self.compile_dir, self.project_name)
             self.prm_loc = '%s/%s/top.prm' % (
-                self.compile_dir, self.project_name)
-            self.bitstream_loc = '%s/%s/top.bit' % (
                 self.compile_dir, self.project_name)
 
         self.name = 'vivado'
