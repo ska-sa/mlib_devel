@@ -7,7 +7,9 @@ import os
 class au50(YellowBlock):
     def initialize(self):
         self.add_source('utils/cdc_synchroniser.vhd')
+        self.add_source('au50_infr/au50_const.xdc')
         self.add_source('au50')
+        #self.add_source('axi4_lite')
         self.provides = [
             "sys_clk",
             "sys_clk90",
@@ -40,6 +42,13 @@ class au50(YellowBlock):
         inst.add_port('pcie_perstn',          'pcie_perstn',          dir='in',  parent_port=True)
         inst.add_port('pcie_refclk_clk_n',    'pcie_refclk_clk_n',    dir='in',  parent_port=True)
         inst.add_port('pcie_refclk_clk_p',    'pcie_refclk_clk_p',    dir='in',  parent_port=True)
+
+        inst.add_port('gt_ref_clk_0_clk_n',   'gt_ref_clk_0_clk_n',    dir='in',  parent_port=True)
+        inst.add_port('gt_ref_clk_0_clk_p',   'gt_ref_clk_0_clk_p',    dir='in',  parent_port=True)
+        inst.add_port('gt_serial_port_0_grx_n', 'gt_serial_port_0_grx_n',    dir='in',  parent_port=True, width=4)
+        inst.add_port('gt_serial_port_0_grx_p', 'gt_serial_port_0_grx_p',    dir='in',  parent_port=True, width=4)
+        inst.add_port('gt_serial_port_0_gtx_n', 'gt_serial_port_0_gtx_n',    dir='out',  parent_port=True, width=4)
+        inst.add_port('gt_serial_port_0_gtx_p', 'gt_serial_port_0_gtx_p',    dir='out',  parent_port=True, width=4)
         inst.add_port('satellite_gpio_0',     'satellite_gpio_0',     dir='in',  parent_port=True, width=2)
         inst.add_port('satellite_uart_0_rxd', 'satellite_uart_0_rxd', dir='in',  parent_port=True)
         inst.add_port('satellite_uart_0_txd', 'satellite_uart_0_txd', dir='out', parent_port=True)
@@ -61,6 +70,24 @@ class au50(YellowBlock):
         inst.add_port('M04_AXI_0_wready',  'M_AXI_wready',   dir='in',  width=1)
         inst.add_port('M04_AXI_0_wstrb',   'M_AXI_wstrb',    dir='out', width=4)
         inst.add_port('M04_AXI_0_wvalid',  'M_AXI_wvalid',   dir='out', width=1)
+
+        # 100gbe RX interface
+        inst.add_port('M_AXIS_0_tdata',  'M_AXIS_0_tdata',  dir='out', width=512)
+        inst.add_port('M_AXIS_0_tkeep',  'M_AXIS_0_tkeep',  dir='out', width=64)
+        inst.add_port('M_AXIS_0_tuser',  'M_AXIS_0_tuser',  dir='out', width=32)
+        #inst.add_port('M_AXIS_0_tid',    'M_AXIS_0_tid',    dir='out', width=8)
+        inst.add_port('M_AXIS_0_tlast',  'M_AXIS_0_tlast',  dir='out', width=1)
+        inst.add_port('M_AXIS_0_tready', 'M_AXIS_0_tready', dir='in',  width=1)
+        inst.add_port('M_AXIS_0_tvalid', 'M_AXIS_0_tvalid', dir='out', width=1)
+
+        # 100gbe TX interface
+        inst.add_port('S_AXIS_0_tdata',  'S_AXIS_0_tdata',  dir='out', width=512)
+        inst.add_port('S_AXIS_0_tkeep',  'S_AXIS_0_tkeep',  dir='out', width=64)
+        inst.add_port('S_AXIS_0_tuser',  'S_AXIS_0_tuser',  dir='out', width=32)
+        #inst.add_port('S_AXIS_0_tid',    'S_AXIS_0_tid',    dir='out', width=8)
+        inst.add_port('S_AXIS_0_tlast',  'S_AXIS_0_tlast',  dir='out', width=1)
+        inst.add_port('S_AXIS_0_tready', 'S_AXIS_0_tready', dir='out', width=1)
+        inst.add_port('S_AXIS_0_tvalid', 'S_AXIS_0_tvalid', dir='in',  width=1)
 
         top.assign_signal('user_rst', '!sys_rst_n')
         top.assign_signal('axil_rst', '!axil_rst_n')
@@ -97,6 +124,24 @@ class au50(YellowBlock):
         tcl_cmds['pre_synth'] += ['import_files -force -fileset constrs_1 %s/au50_infr/au50_bd.xdc'%os.getenv('HDL_ROOT')]
         tcl_cmds['pre_synth'] += ['import_files -force -fileset constrs_1 %s/au50_infr/au50_bitstream.xdc'%os.getenv('HDL_ROOT')]
 
+        # add the dsp_send IP to the IP catalog
+        # add the udp core user IP to the IP catalog
+        tcl_cmds['pre_synth'] += ['set repos [get_property ip_repo_paths [current_project]]']
+        tcl_cmds['pre_synth'] += ['set_property ip_repo_paths "$repos %s/dsp_send/" [current_project]'%os.getenv('HDL_ROOT')]
+        tcl_cmds['pre_synth'] += ['set repos [get_property ip_repo_paths [current_project]]']
+        tcl_cmds['pre_synth'] += ['set_property ip_repo_paths "$repos %s/serial_pipe/" [current_project]'%os.getenv('HDL_ROOT')]
+        tcl_cmds['pre_synth'] += ['set repos [get_property ip_repo_paths [current_project]]']
+        tcl_cmds['pre_synth'] += ['set_property ip_repo_paths "$repos %s/alveo_onehundred_gbe/" [current_project]'%os.getenv('HDL_ROOT')]
+        tcl_cmds['pre_synth'] += ['update_ip_catalog']
+
+        tcl_cmds['pre_synth'] += ['import_files -force -norecurse %s/alveo_onehundred_gbe/src/common_stfc_lib/'%os.getenv('HDL_ROOT')]
+        #tcl_cmds['pre_synth'] += ['set_property library common_stfc_lib [get_files  %s/alveo_onehundred_gbe/src/common_stfc_lib/]'%os.getenv('HDL_ROOT')]
+        tcl_cmds['pre_synth'] += ['set_property library common_mem_lib [get_files [get_property directory [current_project]]/myproj.srcs/sources_1/imports/src/common_mem_lib/*.vhd]']
+        tcl_cmds['pre_synth'] += ['set_property library common_ox_lib [get_files [get_property directory [current_project]]/myproj.srcs/sources_1/imports/src/common_ox_lib/*.vhd]']
+        tcl_cmds['pre_synth'] += ['set_property library common_stfc_lib [get_files [get_property directory [current_project]]/myproj.srcs/sources_1/imports/src/common_stfc_lib/*.vhd]']
+        tcl_cmds['pre_synth'] += ['set_property library axi4_lite [get_files [get_property directory [current_project]]/myproj.srcs/sources_1/imports/axi4_lite/*.vhd]']
+
+
         # run the block diagram generation script
         tcl_cmds['pre_synth'] += ['source {}'.format(self.hdl_root + '/au50_infr/au50_bd.tcl')]
 
@@ -115,8 +160,77 @@ class au50(YellowBlock):
         #tcl_cmds['pre_synth'] += ['make_wrapper -files [get_files [get_property directory [current_project]]/myproj.srcs/sources_1/bd/au50_bd/au50_bd.bd] -top']
         tcl_cmds['pre_synth'] += ['update_compile_order -fileset sources_1']
 
+        tcl_cmds['pre_impl'] += ['create_clock -period 6.206 [get_ports gt_ref_clk_0_clk_p]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN N37 [get_ports gt_ref_clk_0_clk_n]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN N36 [get_ports gt_ref_clk_0_clk_p]']
+
+        tcl_cmds['pre_impl'] += ['create_clock -period 10.000 [get_ports pcie_refclk_clk_p]']
+        tcl_cmds['pre_impl'] += ['create_clock -period 10.000 [get_ports cmc_clk_clk_p]']
+
+        tcl_cmds['pre_impl'] += ['set_property LOC GTYE4_CHANNEL_X0Y28 [get_cells {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN J45 [get_ports {gt_serial_port_0_grx_p[0]}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN J46 [get_ports {gt_serial_port_0_grx_n[0]}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN D42 [get_ports {gt_serial_port_0_gtx_p[0]}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN D43 [get_ports {gt_serial_port_0_gtx_n[0]}]']
+
+        tcl_cmds['pre_impl'] += ['set_property LOC GTYE4_CHANNEL_X0Y29 [get_cells {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN G45 [get_ports {gt_serial_port_0_grx_p[1]}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN G46 [get_ports {gt_serial_port_0_grx_n[1]}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN C40 [get_ports {gt_serial_port_0_gtx_p[1]}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN C41 [get_ports {gt_serial_port_0_gtx_n[1]}]']
+
+        tcl_cmds['pre_impl'] += ['set_property LOC GTYE4_CHANNEL_X0Y30 [get_cells {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN F43 [get_ports {gt_serial_port_0_grx_p[2]}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN F44 [get_ports {gt_serial_port_0_grx_n[2]}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN B42 [get_ports {gt_serial_port_0_gtx_p[2]}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN B43 [get_ports {gt_serial_port_0_gtx_n[2]}]']
+
+        tcl_cmds['pre_impl'] += ['set_property LOC GTYE4_CHANNEL_X0Y31 [get_cells {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN E45 [get_ports {gt_serial_port_0_grx_p[3]}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN E46 [get_ports {gt_serial_port_0_grx_n[3]}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN A40 [get_ports {gt_serial_port_0_gtx_p[3]}]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN A41 [get_ports {gt_serial_port_0_gtx_n[3]}]']
+
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN BB26 [get_ports satellite_uart_0_rxd]']
+        tcl_cmds['pre_impl'] += ['set_property -dict {IOSTANDARD LVCMOS18} [get_ports satellite_uart_0_rxd]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN BB25 [get_ports satellite_uart_0_txd]']
+        tcl_cmds['pre_impl'] += ['set_property -dict {IOSTANDARD LVCMOS18 DRIVE 4} [get_ports satellite_uart_0_txd]']
+
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN J18 [get_ports hbm_cattrip_tri_o]']
+        tcl_cmds['pre_impl'] += ['set_property -dict {IOSTANDARD LVCMOS18 DRIVE 4} [get_ports hbm_cattrip_tri_o]']
+
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN AW27 [get_ports pcie_perstn]']
+        tcl_cmds['pre_impl'] += ['set_property -dict {IOSTANDARD LVCMOS18} [get_ports pcie_perstn]']
+
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN AF8 [get_ports pcie_refclk_clk_n]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN AF9 [get_ports pcie_refclk_clk_p]']
+
+        tcl_cmds['pre_impl'] += ['set_property IOSTANDARD LVDS [get_ports cmc_clk_clk_n]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN G17 [get_ports cmc_clk_clk_p]']
+        tcl_cmds['pre_impl'] += ['set_property PACKAGE_PIN G16 [get_ports cmc_clk_clk_n]']
+        tcl_cmds['pre_impl'] += ['set_property IOSTANDARD LVDS [get_ports cmc_clk_clk_p]']
+        tcl_cmds['pre_impl'] += ['set_property DQS_BIAS TRUE [get_ports cmc_clk_clk_p]']
+
+        tcl_cmds['pre_impl'] += ['set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins au50_bd_inst/clk_wiz_0/inst/mmcme4_adv_inst/CLKOUT0]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_pins au50_bd_inst/xdma_0/inst/pcie4c_ip_i/inst/au50_bd_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]] -group [get_clocks -of_objects [get_pins au50_bd_inst/xdma_0/inst/pcie4c_ip_i/inst/au50_bd_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/RXOUTCLK}]]']
+
+        tcl_cmds['pre_impl'] += ['set_false_path -from [get_ports pcie_perstn]']
+        tcl_cmds['pre_impl'] += ['set_false_path -from [get_ports pcie_perstn]']
+        tcl_cmds['pre_impl'] += ['set_false_path -from [get_ports satellite_uart_0_rxd]']
+        tcl_cmds['pre_impl'] += ['set_false_path -from [get_ports satellite_uart_0_rxd]']
+
+        tcl_cmds['pre_impl'] += ['set_false_path -to [get_ports hbm_cattrip_tri_o]']
+        tcl_cmds['pre_impl'] += ['set_false_path -to [get_ports hbm_cattrip_tri_o]']
+        tcl_cmds['pre_impl'] += ['set_false_path -to [get_ports satellite_uart_0_txd]']
+        tcl_cmds['pre_impl'] += ['set_false_path -to [get_ports satellite_uart_0_txd]']
+
+        tcl_cmds['pre_impl'] += ['set_operating_conditions -design_power_budget 63.0']
+
         # it is probably better to add this to constraints files. We will come back to this as there will be more similar constraints ;)
         # we will just need to add these to an xdc file that runs post synth.
         tcl_cmds['pre_impl'] += ['set_clock_groups -asynchronous -group [get_clocks axi_bram_ctrl_lmb_BRAM_PORTA_CLK] -group [get_clocks clk_out1_au50_bd_clk_wiz_0_0]']
+        tcl_cmds['pre_impl'] += ['set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins au50_bd_inst/clk_wiz_0/inst/mmcme4_adv_inst/CLKOUT0]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_pins au50_bd_inst/xdma_0/inst/pcie4c_ip_i/inst/au50_bd_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]] -group [get_clocks -of_objects [get_pins au50_bd_inst/xdma_0/inst/pcie4c_ip_i/inst/au50_bd_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/RXOUTCLK}]]']
+        tcl_cmds['pre_impl'] += ['set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins au50_bd_inst/clk_wiz_0/inst/mmcme4_adv_inst/CLKOUT0]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_pins au50_bd_inst/xdma_0/inst/pcie4c_ip_i/inst/au50_bd_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]] -group [get_clocks -of_objects [get_pins au50_bd_inst/xdma_0/inst/pcie4c_ip_i/inst/au50_bd_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/RXOUTCLK}]]']
+        tcl_cmds['pre_impl'] += ['set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins au50_bd_inst/clk_wiz_1/inst/mmcme4_adv_inst/CLKOUT0]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_pins au50_bd_inst/xdma_0/inst/pcie4c_ip_i/inst/au50_bd_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]] -group [get_clocks -of_objects [get_pins au50_bd_inst/xdma_0/inst/pcie4c_ip_i/inst/au50_bd_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/RXOUTCLK}]]']
+        tcl_cmds['pre_impl'] += ['set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins au50_bd_inst/clk_wiz_1/inst/mmcme4_adv_inst/CLKOUT0]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_pins au50_bd_inst/xdma_0/inst/pcie4c_ip_i/inst/au50_bd_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]] -group [get_clocks -of_objects [get_pins au50_bd_inst/xdma_0/inst/pcie4c_ip_i/inst/au50_bd_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/RXOUTCLK}]]']
 
         return tcl_cmds

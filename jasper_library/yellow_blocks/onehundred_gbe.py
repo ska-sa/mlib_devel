@@ -10,6 +10,8 @@ class onehundred_gbe(YellowBlock):
     def factory(blk, plat, hdl_root=None):
         if plat.name in ['vcu118', 'vcu128'] or plat.conf.get('family', None) in ["ultrascaleplus"]:
             return onehundredgbe_usplus(blk, plat, hdl_root)
+        if plat.name in ['au50'] or plat.conf.get('family', None) in ["ultrascaleplus"]:
+            return onehundredgbe_alveo(blk, plat, hdl_root)
         else:
             raise RuntimeError("Don't know how to implement 100GbE for this board/FPGA")
     """
@@ -281,4 +283,73 @@ class onehundredgbe_usplus(onehundred_gbe):
         # Unplace all CMACs post_synth, then place all pre_impl, to avoid situations where we try to place on a site already being used
         tcl_cmds['post_synth'] = ['unplace_cell [get_cells -hierarchical -filter { PRIMITIVE_TYPE == ADVANCED.MAC.CMACE4 && NAME =~ "*%s_inst/*" }]' % self.fullname]
         tcl_cmds['pre_impl'] = ['place_cell [get_cells -hierarchical -filter { PRIMITIVE_TYPE == ADVANCED.MAC.CMACE4 && NAME =~ "*%s_inst/*" }] %s' % (self.fullname, self.cmac_loc)]
+        return tcl_cmds
+
+
+class onehundredgbe_alveo(onehundred_gbe):
+    def initialize(self):
+        self.typecode = TYPECODE_ETHCORE
+
+        # For partial reconfig, it is useful to have statically-named top-level ports
+        # which don't depend on model name. Generate a prefix which will probably
+        # be unique
+        self.portbase = '{blocktype}{port}'.format(blocktype=self.blocktype, port=self.port)
+
+        try:
+            ethconf = self.platform.conf["onehundredgbe"]
+        except KeyError:
+            self.logger.exception("Failed to find `onehundredgbe` configuration in platform's YAML file")
+            raise
+
+        kdir = "alveo_onehundred_gbe/"
+        self.add_source(kdir + '*')
+        self.add_source('serial_pipe/hdl/serial_pipe.vhd')
+        self.add_source('dsp_send/dsp_send.vhd')
+
+    def modify_top(self, top):
+        #inst = top.get_instance(entity='casper100g_noaxi', name=self.fullname+'_inst')
+        # Adding the wires for the signals to 
+        top.add_raw_string('wire [511:0] %s_tx_data;\n' %self.fullname)
+        top.add_raw_string('wire [0:0]   %s_tx_valid;\n' %self.fullname)
+        top.add_raw_string('wire [0:0]   %s_tx_eof;\n' %self.fullname)
+        top.add_raw_string('wire [63:0]  %s_tx_keep;\n' %self.fullname)
+        top.add_raw_string('wire [15:0]  %s_tx_src_port;\n' %self.fullname)
+        top.add_raw_string('wire [15:0]  %s_tx_dest_port;\n' %self.fullname)
+        top.add_raw_string('wire [0:0]   %s_tx_ack;\n' %self.fullname)
+
+        top.add_raw_string('wire [511:0] %s_rx_data;\n' %self.fullname)
+        top.add_raw_string('wire [0:0]   %s_rx_valid;\n' %self.fullname)
+        top.add_raw_string('wire [63:0]  %s_rx_keep;\n' %self.fullname)
+        top.add_raw_string('wire [0:0]   %s_rx_eof;\n' %self.fullname)
+        top.add_raw_string('wire [15:0]  %s_rx_src_port;\n' %self.fullname)
+        top.add_raw_string('wire [15:0]  %s_rx_dest_port;\n' %self.fullname)
+        top.add_raw_string('wire [0:0]   %s_rx_ack;\n' %self.fullname)
+
+        top.assign_signal('%s_tx_data' %self.fullname,            'S_AXIS_0_tdata')
+        top.assign_signal('%s_tx_valid' %self.fullname,           'S_AXIS_0_tvalid')
+        top.assign_signal('%s_tx_eof' %self.fullname,             'S_AXIS_0_tlast')
+        top.assign_signal('%s_tx_keep' %self.fullname,            'S_AXIS_0_tkeep')
+        top.assign_signal('%s_tx_dest_port' %self.fullname,       'S_AXIS_0_tuser[31:16]')
+        top.assign_signal('%s_tx_src_port' %self.fullname,        'S_AXIS_0_tuser[15:0]')
+        top.assign_signal('%s_tx_ack' %self.fullname,             'S_AXIS_0_tready')
+        
+        top.assign_signal('%s_rx_data' %self.fullname,            'M_AXIS_0_tdata')
+        top.assign_signal('%s_rx_valid' %self.fullname,           'M_AXIS_0_tvalid')
+        top.assign_signal('%s_rx_keep' %self.fullname,            'M_AXIS_0_tkeep')
+        top.assign_signal('%s_rx_eof' %self.fullname,             'M_AXIS_0_tlast')
+        top.assign_signal('%s_rx_dest_port' %self.fullname,       'M_AXIS_0_tuser[31:16]')
+        top.assign_signal('%s_rx_src_port' %self.fullname,        'M_AXIS_0_tuser[15:0]')
+        top.assign_signal('%s_rx_ack' %self.fullname,             'M_AXIS_0_tready')
+
+        #top.assign_signal('%s_gbe_led_up' %self.fullname, '%s_gbe_led_up' %self.fullname)
+        #top.assign_signal('%s_gbe_led_rx' %self.fullname, '%s_gbe_led_rx' %self.fullname)
+        #top.assign_signal('%s_gbe_led_tx' %self.fullname, '%s_gbe_led_tx' %self.fullname)
+
+
+    def gen_constraints(self):
+        consts = []
+        return consts
+
+    def gen_tcl_cmds(self):
+        tcl_cmds = {}
         return tcl_cmds

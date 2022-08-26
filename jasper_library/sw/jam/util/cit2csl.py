@@ -104,7 +104,8 @@ csl = struct.pack('>H', len(csl)) + csl
 
 if args.bin:
     # Output CSL as binary
-    sys.stdout.buffer.write(csl)
+    #sys.stdout.buffer.write(csl)
+    sys.stdout.write(csl)
 else:
     # Output CSL as memory file
     print(('@%08X' % args.address))
@@ -120,6 +121,8 @@ else:
     
         #sys.stderr.writelines(len(line))
         sys.stdout.write('   ')
-        for byte in line:
-            sys.stdout.write(' %02X' % byte)
+        # the following doesnt seem to work with Python3. I am commenting it out for now
+        # as we dont need it for the alveo work. 
+        #for byte in line:
+        #    sys.stdout.write(' %02X' % byte)
         sys.stdout.write('\n')

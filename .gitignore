@@ -22,8 +22,9 @@ xps_base/*/pcores/opb_opb_lite_v*/
 xps_base/*/pcores/opb_v20_v*/
 xps_base/*/pcores/proc_common_v*/
 
-# Ignore all files that start with "startsg." (e.g. startsg.local)
+# Ignore all files that start with "startsg." or "startmc." (e.g. startsg.local)
 startsg.*
+startmc.*
 
 # These came from ska-sa -- not sure what the story is here
 xps_base/XPS_ROACH2_base/system.xmp.sx475t.updated

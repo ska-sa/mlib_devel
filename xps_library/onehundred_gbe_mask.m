@@ -54,36 +54,20 @@ gateway_ins = find_system(cursys, 'searchdepth', 1, 'FollowLinks', ...
     'on', 'lookundermasks', 'all', 'masktype', 'Xilinx Gateway In Block');
 for ctr = 1 : length(gateway_ins)
     gw = gateway_ins{ctr};
-    if regexp(get_param(gw, 'Name'), '_tx_afull$')
-        set_param(gw, 'Name', clear_name([cursys, '_tx_afull']));
-    elseif regexp(get_param(gw, 'Name'), '_tx_overflow$')
-        set_param(gw, 'Name', clear_name([cursys, '_tx_overflow']));
+    if regexp(get_param(gw, 'Name'), '_rx_data$')
+        set_param(gw, 'Name', clear_name([cursys, '_rx_data']));
     elseif regexp(get_param(gw, 'Name'), '_rx_valid$')
         set_param(gw, 'Name', clear_name([cursys, '_rx_valid']));
-    elseif regexp(get_param(gw, 'Name'), '_rx_data$')
-        set_param(gw, 'Name', clear_name([cursys, '_rx_data']));
-    elseif regexp(get_param(gw, 'Name'), '_rx_source_ip$')
-        set_param(gw, 'Name', clear_name([cursys, '_rx_source_ip']));
-    elseif regexp(get_param(gw, 'Name'), '_rx_source_port$')
-        set_param(gw, 'Name', clear_name([cursys, '_rx_source_port']));
-    elseif regexp(get_param(gw, 'Name'), '_rx_dest_ip$')
-        set_param(gw, 'Name', clear_name([cursys, '_rx_dest_ip']));
     elseif regexp(get_param(gw, 'Name'), '_rx_dest_port$')
         set_param(gw, 'Name', clear_name([cursys, '_rx_dest_port']));
-    elseif regexp(get_param(gw, 'Name'), '_rx_end_of_frame$')
-        set_param(gw, 'Name', clear_name([cursys, '_rx_end_of_frame']));
-    elseif regexp(get_param(gw, 'Name'), '_rx_bad_frame$')
-        set_param(gw, 'Name', clear_name([cursys, '_rx_bad_frame']));
-    elseif regexp(get_param(gw, 'Name'), '_rx_overrun$')
-        set_param(gw, 'Name', clear_name([cursys, '_rx_overrun']));
-    elseif regexp(get_param(gw, 'Name'), '_led_up$')
-        set_param(gw, 'Name', clear_name([cursys, '_led_up']));
-    elseif regexp(get_param(gw, 'Name'), '_led_rx$')
-        set_param(gw, 'Name', clear_name([cursys, '_led_rx']));
-    elseif regexp(get_param(gw, 'Name'), '_led_tx$')
-        set_param(gw, 'Name', clear_name([cursys, '_led_tx']));
-    elseif regexp(get_param(gw, 'Name'), '_rx_size$')
-        set_param(gw, 'Name', clear_name([cursys, '_rx_size']));
+    elseif regexp(get_param(gw, 'Name'), '_rx_src_port$')
+        set_param(gw, 'Name', clear_name([cursys, '_rx_src_port']));
+    elseif regexp(get_param(gw, 'Name'), '_tx_ack')
+        set_param(gw, 'Name', clear_name([cursys, '_tx_ack']));
+    elseif regexp(get_param(gw, 'Name'), '_rx_eof$')
+        set_param(gw, 'Name', clear_name([cursys, '_rx_eof']));
+    elseif regexp(get_param(gw, 'Name'), '_rx_keep$')
+        set_param(gw, 'Name', clear_name([cursys, '_rx_keep']));
     else
         errordlg(['Unknown gateway: ', get_param(gw, 'Parent'), '/', ...
             get_param(gw, 'Name')]);
@@ -94,24 +78,20 @@ gateway_outs = find_system(cursys, 'searchdepth', 1, ...
     'masktype', 'Xilinx Gateway Out Block');
 for ctr = 1 : length(gateway_outs)
     gw = gateway_outs{ctr};
-    if regexp(get_param(gw, 'Name'), '_rst$')
-        set_param(gw, 'Name', clear_name([cursys, '_rst']));
+    if regexp(get_param(gw, 'Name'), '_tx_data$')
+        set_param(gw, 'Name', clear_name([cursys, '_tx_data']));
     elseif regexp(get_param(gw, 'Name'), '_tx_valid$')
         set_param(gw, 'Name', clear_name([cursys, '_tx_valid']));
-    elseif regexp(get_param(gw, 'Name'), '_tx_end_of_frame$')
-        set_param(gw, 'Name', clear_name([cursys, '_tx_end_of_frame']));
-    elseif regexp(get_param(gw, 'Name'), '_tx_discard$')
-        set_param(gw, 'Name', clear_name([cursys, '_tx_discard']));
-    elseif regexp(get_param(gw, 'Name'), '_tx_data$')
-        set_param(gw, 'Name', clear_name([cursys, '_tx_data']));
-    elseif regexp(get_param(gw, 'Name'), '_tx_dest_ip$')
-        set_param(gw, 'Name', clear_name([cursys, '_tx_dest_ip']));
+    elseif regexp(get_param(gw, 'Name'), '_tx_eof$')
+        set_param(gw, 'Name', clear_name([cursys, '_tx_eof']));
+    elseif regexp(get_param(gw, 'Name'), '_tx_keep$')
+        set_param(gw, 'Name', clear_name([cursys, '_tx_keep']));
     elseif regexp(get_param(gw, 'Name'), '_tx_dest_port$')
         set_param(gw, 'Name', clear_name([cursys, '_tx_dest_port']));
-    elseif regexp(get_param(gw, 'Name'), '_rx_ack$')
+    elseif regexp(get_param(gw, 'Name'), '_tx_src_port$')
+        set_param(gw, 'Name', clear_name([cursys, '_tx_src_port']));
+    elseif regexp(get_param(gw, 'Name'), '_rx_ack')
         set_param(gw, 'Name', clear_name([cursys, '_rx_ack']));
-    elseif regexp(get_param(gw, 'Name'), '_rx_overrun_ack$')
-        set_param(gw, 'Name', clear_name([cursys, '_rx_overrun_ack']));
     else
         errordlg(['Unknown gateway: ', get_param(gw, 'Parent'), '/', ...
             get_param(gw, 'Name')]);
@@ -123,7 +103,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % make sure the terminator and port are there
-reuse_block(cursys, 'debug_rst', 'built-in/inport', 'Port', '9', ...
+reuse_block(cursys, 'debug_rst', 'built-in/inport', 'Port', '8', ...
     'Position', [120   130   150   146]);
 reuse_block(cursys, 'term1', 'built-in/Terminator', ...
     'Position', [200   135   220   155]);
