@@ -14,10 +14,13 @@
 module axi_rd_wr_state_machine #(
     //Define width of the datapath
     parameter DWIDTH                = 256,  //Leave untouched
-    //Define HB interface width
+    //Define HBM interface width
     parameter NUM_DATA_BYTES        = 32,   //Leave untouched
+    // HBM Interface Address Width
     parameter AWIDTH                = 27,
-    parameter TWIDTH                = 9
+    parameter TWIDTH                = 6,
+    // AXI Interface 
+    parameter AXI_ADD_WIDTH         = 32
 
   )  (
     input  wire CLK,
@@ -27,15 +30,37 @@ module axi_rd_wr_state_machine #(
     //----Connect AXI Ports
     //----------------------------------
     //From AXI to HMC Ctrl TX
-    output  wire                         s_axis_tx_TVALID,
-    input   wire                         s_axis_tx_TREADY,
-    output  wire [DWIDTH-1:0]            s_axis_tx_TDATA,
+    output  wire                         s_axis_tx_TVALID,  //Write Data Valid
+    input   wire                         s_axis_tx_TREADY, //Write Data Ready
+    output  wire [DWIDTH-1:0]            s_axis_tx_TDATA, //Write Data
+    output  wire [AXI_ADD_WIDTH-1:0]     s_axis_tx_TADD,  //Write Address
+    output  wire                         s_axis_tx_TADD_VALID, //write address Valid
+    output  wire [2:0]                   s_axis_tx_TADD_SIZE,  //write address size   
+    input   wire                         s_axis_tx_TADD_READY, //Write address Ready
+    output  wire [7:0]                   s_axis_tx_TADD_LENGTH, //write address Length
+    output  wire [1:0]                   s_axis_tx_TADD_BURST, //write addresss Burst     
+    output  wire [TWIDTH-1:0]            s_axis_tx_TADD_ID, //Write address ID
+    input   wire [TWIDTH-1:0]            s_axis_tx_TRESP_ID, //Write Response ID
+    input   wire [1:0]                   s_axis_tx_TRESP, //Write Data Response
+    input   wire                         s_axis_tx_RESP_VALID, //Write response valid
+    output  wire                         s_axis_tx_RESP_RDY, //Write Response Ready   
+    output  wire                         s_axis_tx_TLAST, //Write Data Last
+    output  wire [NUM_DATA_BYTES-1:0]    s_axis_tx_TSTROBE, //Write Data Byte Strobe
     //From HMC Ctrl RX to AXI
-    input   wire                         m_axis_rx_TVALID,
-    output  wire                         m_axis_rx_TREADY,
-    input   wire [DWIDTH-1:0]            m_axis_rx_TDATA,
-
-
+    input   wire                         m_axis_rx_TVALID, //Read Data Valid
+    output  wire                         m_axis_rx_TREADY, //Read Data Ready
+    input   wire [DWIDTH-1:0]            m_axis_rx_TDATA, //Read Data
+    output  wire [AXI_ADD_WIDTH-1:0]     m_axis_rx_TADD, //Read Data Address
+    input   wire [TWIDTH-1:0]            m_axis_rx_TID, //Read Data ID
+    output  wire [1:0]                   m_axis_rx_TADD_BURST, //read addresss Burst
+    output  wire [2:0]                   m_axis_rx_TADD_SIZE,  //Read address size
+    input   wire                         m_axis_rx_TADD_READY, //Read address Ready
+    output  wire [7:0]                   m_axis_rx_TADD_LENGTH, //Read address Length
+    output  wire [TWIDTH-1:0]            m_axis_rx_TADD_ID, //Read Address ID
+    output  wire                         m_axis_rx_TADD_VALID, //Read Address valid
+    input   wire [1:0]                   m_axis_rx_TRESP, //Read Data Response
+    input   wire                         m_axis_rx_TLAST, //Read Data Last
+    
     // write interface
     input  wire [AWIDTH-1:0] WR_ADDRESS,
     input  wire [DWIDTH-1:0] DATA_IN,
@@ -96,7 +121,7 @@ module axi_rd_wr_state_machine #(
   // State machine state vector elements
   localparam STATE_IDLE         = 4'd0; // Default state: enter on power up or reset, exit on INIT_DONE == 1'b1
   localparam WAIT_AXI_TX_RDY    = 4'd1; // Wait for AXI TX bus to become available
-  localparam STATE_WR_DATA      = 4'd2; // Issue write or read data [255:0] transactions
+  localparam STATE_WR_DATA      = 4'd2; // Issue write data [255:0] transactions
   localparam STATE_CHK_RD_DATA  = 4'd3; // Wait for RX AXI bus to present valid return data and then check it for errors
   
   // ***************************************************************************************************************************************************************************************
