@@ -20,7 +20,8 @@ module axi_rd_wr_state_machine #(
     parameter AWIDTH                = 27,
     parameter TWIDTH                = 6,
     // AXI Interface 
-    parameter AXI_ADD_WIDTH         = 32
+    parameter AXI_ADD_WIDTH         = 32,
+
 
   )  (
     input  wire CLK,
@@ -35,13 +36,13 @@ module axi_rd_wr_state_machine #(
     output  wire [DWIDTH-1:0]            s_axis_tx_TDATA, //Write Data
     output  wire [AXI_ADD_WIDTH-1:0]     s_axis_tx_TADD,  //Write Address
     output  wire                         s_axis_tx_TADD_VALID, //write address Valid
-    output  wire [2:0]                   s_axis_tx_TADD_SIZE,  //write address size   
+    output  wire [2:0]                   s_axis_tx_TADD_SIZE,  //write address size (bytes in transfer = 32, "101")  
     input   wire                         s_axis_tx_TADD_READY, //Write address Ready
-    output  wire [7:0]                   s_axis_tx_TADD_LENGTH, //write address Length
-    output  wire [1:0]                   s_axis_tx_TADD_BURST, //write addresss Burst     
+    output  wire [7:0]                   s_axis_tx_TADD_LENGTH, //write address Length (burst length = 1 = "00000001")
+    output  wire [1:0]                   s_axis_tx_TADD_BURST, //write addresss Burst (BURST TYPE = INC = "01")      
     output  wire [TWIDTH-1:0]            s_axis_tx_TADD_ID, //Write address ID
     input   wire [TWIDTH-1:0]            s_axis_tx_TRESP_ID, //Write Response ID
-    input   wire [1:0]                   s_axis_tx_TRESP, //Write Data Response
+    input   wire [1:0]                   s_axis_tx_TRESP, //Write Data Response ("00" - Okay, "01" - read or write okay, "10" - subordinate error, decode error "11")
     input   wire                         s_axis_tx_RESP_VALID, //Write response valid
     output  wire                         s_axis_tx_RESP_RDY, //Write Response Ready   
     output  wire                         s_axis_tx_TLAST, //Write Data Last
@@ -51,14 +52,14 @@ module axi_rd_wr_state_machine #(
     output  wire                         m_axis_rx_TREADY, //Read Data Ready
     input   wire [DWIDTH-1:0]            m_axis_rx_TDATA, //Read Data
     output  wire [AXI_ADD_WIDTH-1:0]     m_axis_rx_TADD, //Read Data Address
-    input   wire [TWIDTH-1:0]            m_axis_rx_TID, //Read Data ID
-    output  wire [1:0]                   m_axis_rx_TADD_BURST, //read addresss Burst
-    output  wire [2:0]                   m_axis_rx_TADD_SIZE,  //Read address size
+    input   wire [TWIDTH-1:0]            m_axis_rx_TID, //Read Data 
+    output  wire [1:0]                   m_axis_rx_TADD_BURST, //read addresss Burst (BURST TYPE = INC = "01")
+    output  wire [2:0]                   m_axis_rx_TADD_SIZE,  //Read address size (bytes in transfer = 32, "101")
     input   wire                         m_axis_rx_TADD_READY, //Read address Ready
-    output  wire [7:0]                   m_axis_rx_TADD_LENGTH, //Read address Length
+    output  wire [7:0]                   m_axis_rx_TADD_LENGTH, //Read address Length (burst length = 1 = "00000001")
     output  wire [TWIDTH-1:0]            m_axis_rx_TADD_ID, //Read Address ID
     output  wire                         m_axis_rx_TADD_VALID, //Read Address valid
-    input   wire [1:0]                   m_axis_rx_TRESP, //Read Data Response
+    input   wire [1:0]                   m_axis_rx_TRESP, //Read Data Response ("00" - Okay, "01" - read or write okay, "10" - subordinate error, decode error "11")
     input   wire                         m_axis_rx_TLAST, //Read Data Last
     
     // write interface
@@ -82,142 +83,115 @@ module axi_rd_wr_state_machine #(
     
   );
   
-  
-  //Debug HBM Registers
-  
-  //assign dbg_wr_req_count = wr_req_count;
-  //assign dbg_rd_req_count = rd_req_count;
-  
-  //assign dbg_flit_err_resp_pulse_gen_state = flit_err_resp_pulse_gen_state;
-  //assign dbg_flit_err_resp_pulse = flit_err_resp_pulse;
-    
-
 
 // Signals used in this module
   reg [3:0] wr_axi_state,rd_axi_state;
-  reg s_axis_tx_TVALID_i;
-  reg [DWIDTH-1:0]  s_axis_tx_TDATA_i;
-  reg [NUM_DATA_BYTES-1:0] s_axis_tx_TUSER_i;
-  reg m_axis_rx_TREADY_i;
-  wire m_axis_rx_TREADY_i;
-  reg [8:0] tag;
-  reg [15:0] wait_for_NULL_FLITS_to_complete_cnt;
-  reg next_flit_case3_second;
-  reg next_flit_case3_third;
-  reg next_flit_case4_second;
-  reg next_flit_case4_third;
-  reg tx_data_hold;
+  reg [15:0] wait_for_time_before_bus_trans_cnt;
   reg [63:0] wr_req_count;
   reg [63:0] rd_req_count;
-  reg req_rdy;
+  reg wr_req_rdy;
   
-
-  // Assign external status ports
-  assign s_axis_tx_TVALID = s_axis_tx_TVALID_i; //& s_axis_tx_TREADY;
-  assign s_axis_tx_TDATA = s_axis_tx_TDATA_i;
-  assign m_axis_rx_TREADY = m_axis_rx_TREADY_i;//m_axis_rx_TREADY_i;
-
-
   // State machine state vector elements
   localparam STATE_IDLE         = 4'd0; // Default state: enter on power up or reset, exit on INIT_DONE == 1'b1
   localparam WAIT_AXI_TX_RDY    = 4'd1; // Wait for AXI TX bus to become available
-  localparam STATE_WR_DATA      = 4'd2; // Issue write data [255:0] transactions
-  localparam STATE_CHK_RD_DATA  = 4'd3; // Wait for RX AXI bus to present valid return data and then check it for errors
+  localparam STATE_WR_DATA      = 4'd2; // Issue write add data and transactions
+  localparam STATE_WR_RESP_DATA = 4'd3; // Wait for write response data and check for errors
   
   // ***************************************************************************************************************************************************************************************
-  // Write State Machine: Issue write or 256bit Data Transmit
+  // Write State Machine: Write Data Transmit
   // ***************************************************************************************************************************************************************************************
   always @(posedge CLK) begin : wr_axi
 
   if (RST) begin
     wr_axi_state <= STATE_IDLE;
-    //addr <= 27'd0; // request addr {2'b00,addr,4b000} [33:32] reserved = "00", 16byte addr, [3:0] reserved 0 (min 16 byte transactions) 
-    s_axis_tx_TDATA_i  <= DWIDTH'd0;
-    s_axis_tx_TVALID_i <= 1'b0; // Deassert all control logic until the HMC is properly initialized
-    s_axis_tx_TUSER_i  <= {NUM_DATA_BYTES{1'b0}};
-    tag <= TWIDTH'd1; // Tag is used to deal with out of order return sequences 
-    wait_for_NULL_FLITS_to_complete_cnt <= 16'd0;
-    req_rdy <= 1'b0;
-    tx_data_hold <= 1'b0;
+    wait_for_time_before_bus_trans_cnt <= 16'd0;
+    wr_req_rdy <= 1'b0;
     wr_req_count <= 64'd0;
-    rd_req_count <= 64'd0;
-    
+    //Write Address
+    s_axis_tx_TADD_VALID <= 1'b0; // Assert the write Address Data Valid
+    s_axis_tx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
+    s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH'd0, 5'b00000};  //Assert Write Address
+    s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
+    s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
+    s_axis_tx_TADD_ID[TWIDTH-1:0] <= TWIDTH'd0;
+    //Write Data
+    s_axis_tx_TDATA[DWIDTH-1:0] <= DWIDTH'd0;
+    s_axis_tx_TVALID <= 1'b0;
+    s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= NUM_DATA_BYTES'b00000000000000000000000000000000'; //Write Data Strobe
+    s_axis_tx_TLAST <= 1'b0; //burst is one, so each transfer is the last
+     
   end else begin
-      s_axis_tx_TVALID_i <= 1'b0;
-      s_axis_tx_TUSER_i  <= {NUM_DATA_BYTES{1'b0}};
-      s_axis_tx_TDATA_i  <= DWIDTH'd0;
 
       case (wr_axi_state)
         // State: Entry to state machine (from reset)
         STATE_IDLE: begin
           wr_axi_state <= STATE_IDLE;
-          if (POST_DONE == 1'b1) begin // We cannot issue any FLITs if the HMC and the openHMC is not initialized!
-            wait_for_NULL_FLITS_to_complete_cnt <= wait_for_NULL_FLITS_to_complete_cnt + 1'b1; // Give some time after the openHMC and HMC have initialize before bomming it with FLITs
+          if (INIT_DONE == 1'b1) begin // We cannot issue any AXI Transactions if the HBM is not initialized!
+            wait_for_time_before_bus_trans_cnt <= wait_for_time_before_bus_trans_cnt + 1'b1; // Give some time after HBM have initialize before doing AXI transactions
           end
-          if (wait_for_NULL_FLITS_to_complete_cnt[8] == 1'b1) begin
-            wr_axi_state <= WAIT_AXI_TX_RDY; // OK waited long enough => bom it with FLITs
+          if (wait_for_time_before_bus_trans_cnt[8] == 1'b1) begin
+            wr_axi_state <= WAIT_AXI_TX_RDY; // OK waited long enough => time for AXI transactions
           end
-        req_rdy <= 1'b0;
+        wr_req_rdy <= 1'b0;
         end
         WAIT_AXI_TX_RDY: begin
-          req_rdy <= 1'b0;
+          wr_req_rdy <= 1'b0;
           wr_axi_state <= WAIT_AXI_TX_RDY; // Wait for TX AXI FIFO to become available
           if (s_axis_tx_TREADY == 1'b1) begin // Make sure AXI TX FIFO is not FULL  
             wr_axi_state <= STATE_WR_DATA;
           end
         end
-        // State: Request WR128 header, followed by write data (WR_REQ_DATA[447:0])
+        // State:Write Address Data (ignoring the subordinate write address ready signals for now. I assume it can handle the throughput with buffers and the data write ready signal should
+        // be good enough
         STATE_WR_DATA: begin
-           
-          
           wr_axi_state <= STATE_WR_DATA;
           //if write is enabled            
-          if (WR_REQ == 1'b1) begin // Write request uses FLITs 2..0       
-            //s_axis_tx_TVALID_i <= 1'b1; // Issue a write to TX AXI FIFO                
-            s_axis_tx_TDATA_i[383:0]  <= {64'd0, DATA_IN, {3'd0,3'd0,{2'd0,WR_ADDRESS,5'd0},tag, 4'd3, 4'd3, 1'b0, 6'b011001}}; // posted write req 32 bytes
-            s_axis_tx_TUSER_i[2:0]  <= 3'b111; // all FLITS 2-0 valid  - Write Req 
-            s_axis_tx_TUSER_i[6:4]  <= 3'b001; // Header on FLIT0 - Write Req  
-            s_axis_tx_TUSER_i[10:8]  <= 3'b100; // Tail on FLIT2 - Write Req 
+          if (WR_REQ == 1'b1) begin // Write to AXI-S Tx      
+            //Write Address
+            s_axis_tx_TADD_VALID <= 1'b1; // Assert the write Address Data Valid
+            s_axis_tx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
+            s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {WR_ADDRESS, 5'b00000};  //Assert Write Address
+            s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
+            s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
+            s_axis_tx_TADD_ID[TWIDTH-1:0] <= TAG_IN;
+            //Write Data
+            s_axis_tx_TDATA[DWIDTH-1:0] <= DATA_IN;
+            s_axis_tx_TVALID <= 1'b1;
+            s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= NUM_DATA_BYTES'b11111111111111111111111111111111'; //Write Data Strobe
+            s_axis_tx_TLAST <= 1'b1; //burst is one, so each transfer is the last
             wr_req_count <= wr_req_count + 1'b1;
-          end
-          //if read is enabled
-          if (RD_REQ == 1'b1) begin  // Read request uses FLIT 3        
-            //s_axis_tx_TVALID_i <= 1'b1; // Issue a write to TX AXI FIFO, with a READ32 command request ie (read 32bytes / 256bits from requested address)
-            s_axis_tx_TDATA_i[511:384]  <= {64'd0, {3'd0,3'd0,{2'd0,RD_ADDRESS,5'd0},TAG_IN, 4'd1, 4'd1, 1'b0, 6'b110001}}; // red req 32 bytes
-            s_axis_tx_TUSER_i[3]  <= 1'b1; // Valid on FLIT3 - Read Req   
-            s_axis_tx_TUSER_i[7]  <= 1'b1; // Header on FLIT3 - Read Req
-            s_axis_tx_TUSER_i[11]  <= 1'b1; // Tail on FLIT3 - Read Req  
-            rd_req_count <= rd_req_count + 1'b1;
-          end
-          //if read or write is enabled
-          if (WR_REQ == 1'b1 || RD_REQ == 1'b1) begin
-            s_axis_tx_TVALID_i <= 1'b1; // Issue a write to TX AXI FIFO
           end else begin
-            s_axis_tx_TVALID_i <= 1'b0; // Disable a write to TX AXI FIFO
-            s_axis_tx_TUSER_i  <= {NUM_DATA_BYTES{1'b0}};
-            s_axis_tx_TDATA_i  <= DWIDTH'd0;
-            req_rdy <= 1'b0;      
+            //Write Address
+            s_axis_tx_TADD_VALID <= 1'b0; // Assert the write Address Data Valid
+            s_axis_tx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
+            s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH'd0, 5'b00000};  //Assert Write Address
+            s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
+            s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
+            s_axis_tx_TADD_ID[TWIDTH-1:0] <= TWIDTH'd0;
+            //Write Data
+            s_axis_tx_TDATA[DWIDTH-1:0] <= DWIDTH'd0;
+            s_axis_tx_TVALID <= 1'b0;
+            s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= NUM_DATA_BYTES'b00000000000000000000000000000000'; //Write Data Strobe
+            s_axis_tx_TLAST <= 1'b0; //burst is one, so each transfer is the last
+            wr_req_rdy <= 1'b0;      
           end
-          //if AXI bus is not ready, then deassert write and read ready signals  
+          //if AXI bus is not ready, then deassert write ready signals  
           if(s_axis_tx_TREADY == 1'b1) begin
-            req_rdy <= 1'b1;
+            wr_req_rdy <= 1'b1;
           end else begin
-            req_rdy <= 1'b0;
+            wr_req_rdy <= 1'b0;
           end
     end    
-      endcase
+     endcase
     end    
   end
 
-  //assign WR_READY = (req_rdy == 1'b1) ? s_axis_tx_TREADY : 1'b0;
-  //assign RD_READY = (req_rdy == 1'b1) ? s_axis_tx_TREADY : 1'b0;
  
- assign WR_READY = req_rdy;
- assign RD_READY = req_rdy;
-
+ assign WR_READY = wr_req_rdy;
+ 
   // ***************************************************************************************************************************************************************************************
   // Read state machine 
-  // Checks incomming memory data from HBM that was requested in the Read/Write state machine
+  // Checks incomming memory data from HBM that was requested in the Read state machine
   // ***************************************************************************************************************************************************************************************
   reg [8:0] rd_tag,rd_tag_i, rd_tag_hold;
   reg [255:0] rd_data, rd_data_i, rd_data_hold;
@@ -285,6 +259,17 @@ module axi_rd_wr_state_machine #(
     r_flit_error_rsp <= 4'b0;
     
   end else begin
+  
+       //if read is enabled
+          if (RD_REQ == 1'b1) begin  // Read request uses FLIT 3        
+            //s_axis_tx_TVALID_i <= 1'b1; // Issue a write to TX AXI FIFO, with a READ32 command request ie (read 32bytes / 256bits from requested address)
+            s_axis_tx_TDATA_i[511:384]  <= {64'd0, {3'd0,3'd0,{2'd0,RD_ADDRESS,5'd0},TAG_IN, 4'd1, 4'd1, 1'b0, 6'b110001}}; // red req 32 bytes
+            s_axis_tx_TUSER_i[3]  <= 1'b1; // Valid on FLIT3 - Read Req   
+            s_axis_tx_TUSER_i[7]  <= 1'b1; // Header on FLIT3 - Read Req
+            s_axis_tx_TUSER_i[11]  <= 1'b1; // Tail on FLIT3 - Read Req  
+            rd_req_count <= rd_req_count + 1'b1;
+          end
+   
             
       m_axis_rx_TREADY_i <= 1'b1; // After reset this module is always ready
       rd_data_val <= 1'b0;
@@ -441,64 +426,127 @@ module axi_rd_wr_state_machine #(
     end    
   end
 
+assign RD_READY = req_rdy;
+  
+  
   //State machine AXI_ERROR_RESP Pulse Generate state elements
   localparam STATE_CHECK_ERROR = 3'd0; // Default state: wait for FLIT_ERROR_RESP error to occur, exit when FLIT_ERROR_RESP occurs 
   localparam STATE_ASSERT_ERROR = 3'd1; //Assert FLIT_ERROR_RESP_PULSE signal  
   localparam STATE_DEASSERT_ERROR = 3'd2; //Deassert FLIT_ERROR_RESP_PULSE and exit to STATE_CHECK_ERROR when FLIT_ERROR_RESP is low again
   
   // Signals used in this state machine
-  reg [2:0] flit_err_resp_pulse_gen_state;
-  reg flit_err_resp_pulse;
+  reg [2:0] axi_wr_err_resp_pulse_gen_state;
+  reg axi_wr_err_resp_pulse;
   
  // ***************************************************************************************************************************************************************************************
-  // FLIT Error Response Pulse Generate State Machine: Generate a pulse every time a FLIT error response occurs, so that the DSP functionality that stops the HMC write/read process when 
-  // a FLIT response error occurs can restart as the single is pulsed and not active high, which causes the mechanism to hang, as the FLIT error response is only cleared when the next
-  // transaction is read. This can't occur if the HMC read/write process is halted.
+  // AXI Error Response Write Pulse Generate State Machine: Generate a pulse every time a AXI error response occurs on write, so that the DSP functionality that stops the HBM write process 
+  // when a AXI response write error occurs can restart as the single is pulsed and not active high, which causes the mechanism to hang, as the AXI write error response is only cleared when the
+  // next transaction is written. This can't occur if the HBM write process is halted.
   // ***************************************************************************************************************************************************************************************
-  always @(posedge CLK) begin : flit_err_resp_pulse_gen
+  always @(posedge CLK) begin : axi_err_wr_resp_pulse_gen
 
   if (RST) begin
-    flit_err_resp_pulse_gen_state <= STATE_CHECK_ERROR;
-    flit_err_resp_pulse <= 1'b0;
+    axi_wr_err_resp_pulse_gen_state <= STATE_CHECK_ERROR;
+    axi_wr_err_resp_pulse <= 1'b0;
+    s_axis_tx_RESP_RDY <= 1'b0;
+    TX_AXI_ERROR_RESP <= 2'b00;
    
   end else begin
-
-      case (flit_err_resp_pulse_gen_state)
+      s_axis_tx_RESP_RDY <= 1'b1;  //Assert Response is Ready
+      case (axi_wr_err_resp_pulse_gen_state)
         // State: Entry to state machine (from reset)
         STATE_CHECK_ERROR: begin
-          flit_err_resp_pulse <= 1'b0;
-          //Wait until a FLIT error response is detected in the Receiver and then exit to state that asserts error
-          if (r_flit_error_rsp[0] == 1'b1 || r_flit_error_rsp[1] == 1'b1 || r_flit_error_rsp[2] == 1'b1 || r_flit_error_rsp[3] == 1'b1 ) begin
-            flit_err_resp_pulse_gen_state <= STATE_ASSERT_ERROR; 
+          axi_wr_err_resp_pulse <= 1'b0;
+          //Wait until an AXI error response is detected on either read and write and then exit to state that asserts error
+          if (s_axis_tx_RESP_VALID == 1'b1 && ( s_axis_tx_TRESP == 2'b10 || s_axis_tx_TRESP == 2'b11)) begin
+            TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
+            axi_wr_err_resp_pulse_gen_state <= STATE_ASSERT_ERROR; 
           //Stay in this state if no error
           end else begin
-            flit_err_resp_pulse_gen_state <= STATE_CHECK_ERROR;
+            axi_wr_err_resp_pulse_gen_state <= STATE_CHECK_ERROR;
+            TX_AXI_ERROR_RESP <= 2'b00;
           end
         end
         STATE_ASSERT_ERROR: begin
           //Assert the error on the FLIT error response pulse signal
-          flit_err_resp_pulse <= 1'b1;
-          flit_err_resp_pulse_gen_state <= STATE_DEASSERT_ERROR;
+          axi_wr_err_resp_pulse <= 1'b1;
+          TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
+          axi_wr_err_resp_pulse_gen_state <= STATE_DEASSERT_ERROR;
         end
         STATE_DEASSERT_ERROR: begin
-          flit_err_resp_pulse <= 1'b0;
-          //Wait in this state until a FLIT error response is cleared and exit to STATE_CHECK_ERROR
-          if (r_flit_error_rsp[0] == 1'b0 && r_flit_error_rsp[1] == 1'b0 && r_flit_error_rsp[2] == 1'b0 && r_flit_error_rsp[3] == 1'b0 ) begin
-            flit_err_resp_pulse_gen_state <= STATE_CHECK_ERROR; 
-          //Stay in this state if FLIT error response is not cleared
+          axi_wr_err_resp_pulse <= 1'b0;
+          //Wait in this state until an AXI error response is cleared and exit to STATE_CHECK_ERROR
+          if (s_axis_tx_RESP_VALID == 1'b1 && s_axis_tx_TRESP == 2'b00 ) begin
+            axi_wr_err_resp_pulse_gen_state <= STATE_CHECK_ERROR; 
+            TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
+          //Stay in this state if AXI error response is not cleared
           end else begin
-            flit_err_resp_pulse_gen_state <= STATE_DEASSERT_ERROR;
+            TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
+            axi_wr_err_resp_pulse_gen_state <= STATE_DEASSERT_ERROR;
           end
         end                    
       endcase
     end    
   end
   
+ // Signals used in this state machine
+  reg [2:0] axi_rd_err_resp_pulse_gen_state;
+  reg axi_rd_err_resp_pulse;
 
+  
+// ***************************************************************************************************************************************************************************************
+  // AXI Error Response Read Pulse Generate State Machine: Generate a pulse every time a AXI error response occurs on read, so that the DSP functionality that stops the HBM read process 
+  // when a AXI response read error occurs can restart as the single is pulsed and not active high, which causes the mechanism to hang, as the AXI read error response is only cleared when the
+  // next transaction is read. This can't occur if the HBM read process is halted.
+  // ***************************************************************************************************************************************************************************************
+  always @(posedge CLK) begin : axi_err_rd_resp_pulse_gen
+
+  if (RST) begin
+    axi_rd_err_resp_pulse_gen_state <= STATE_CHECK_ERROR;
+    axi_rd_err_resp_pulse <= 1'b0;
+    RX_AXI_ERROR_RESP <= 2'b00;
+ 
+  end else begin
+      case (axi_rd_err_resp_pulse_gen_state)
+        // State: Entry to state machine (from reset)
+        STATE_CHECK_ERROR: begin
+          axi_rd_err_resp_pulse <= 1'b0;
+          //Wait until an AXI error response is detected on either read and write and then exit to state that asserts error
+          if (m_axis_rx_TVALID == 1'b1 && ( m_axis_rx_TRESP == 2'b10 || m_axis_rx_TRESP == 2'b11)) begin
+            axi_rd_err_resp_pulse_gen_state <= STATE_ASSERT_ERROR;
+            RX_AXI_ERROR_RESP <= m_axis_rx_TRESP;
+          //Stay in this state if no error
+          end else begin
+            m_axis_rx_TRESP <= 2'b00;
+            RX_AXI_ERROR_RESP <= m_axis_rx_TRESP;
+            axi_rd_err_resp_pulse_gen_state <= STATE_CHECK_ERROR;
+          end
+        end
+        STATE_ASSERT_ERROR: begin
+          //Assert the error on the FLIT error response pulse signal
+          axi_rd_err_resp_pulse <= 1'b1;
+          axi_rd_err_resp_pulse_gen_state <= STATE_DEASSERT_ERROR;
+        end
+        STATE_DEASSERT_ERROR: begin
+          axi_rd_err_resp_pulse <= 1'b0;
+          //Wait in this state until an AXI error response is cleared and exit to STATE_CHECK_ERROR
+          if (m_axis_rx_TVALID == 1'b1 && m_axis_rx_TRESP == 2'b00 ) begin
+            axi_rd_err_resp_pulse_gen_state <= STATE_CHECK_ERROR;
+            RX_AXI_ERROR_RESP <= m_axis_rx_TRESP;
+          //Stay in this state if AXI error response is not cleared
+          end else begin
+            RX_AXI_ERROR_RESP <= m_axis_rx_TRESP;
+            axi_rd_err_resp_pulse_gen_state <= STATE_DEASSERT_ERROR;
+          end
+        end                    
+      endcase
+    end    
+  end
+   
+  
   assign TAG_OUT = rd_tag;
   assign DATA_VALID = rd_data_val;
   assign DATA_OUT = rd_data;
-  assign FLIT_TAIL_ERRSTAT = rd_tail[26:20]; //Assign ERRSTAT register of FLIT tail
-  assign FLIT_ERROR_RESP_PULSE = flit_err_resp_pulse;
+  assign AXI_ERROR_RESP_PULSE = axi_wr_err_resp_pulse || axi_rd_err_resp_pulse; //If Write or Read error occurs then pulse
 
 endmodule
