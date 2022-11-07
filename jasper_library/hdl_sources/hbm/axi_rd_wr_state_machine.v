@@ -85,6 +85,15 @@ module axi_rd_wr_state_machine #(
     
   );
   
+//Debug Signals
+  (* mark_debug = "true" *) wire [63:0] dbg_wr_req_count; //Virtual test probe for the logic analyser
+  (* mark_debug = "true" *) wire [63:0] dbg_rd_req_count; //Virtual test probe for the logic analyser
+  (* mark_debug = "true" *) wire [63:0] dbg_r_data_valid_rx_hbm_valid_count;
+  wire [63:0] r_data_valid_rx_hbm_valid_count;
+    
+  assign dbg_wr_req_count = wr_req_count;
+  assign dbg_rd_req_count = rd_req_count;
+  assign dbg_r_data_valid_rx_hbm_valid_count = r_data_valid_rx_hbm_valid_count;
 
 // Signals used in this module
   reg [3:0] wr_axi_state,rd_axi_state;
