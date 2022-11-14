@@ -21,6 +21,8 @@ provides:
   - adc_clk90
   - adc_clk180
   - adc_clk270
+  - hbm_mem_bank0
+  - hbm_mem_bank1
 pins:
   led:
     iostd: LVCMOS18

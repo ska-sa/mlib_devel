@@ -1,0 +1,605 @@
+import logging
+from .yellow_block import YellowBlock
+from constraints import PortConstraint, ClockConstraint, ClockGroupConstraint, MultiCycleConstraint, \
+    OutputDelayConstraint, RawConstraint
+
+from itertools import count
+
+class hbm(YellowBlock): # class hmc inherits from yellowblock.py
+    #@staticmethod
+    #def factory(blk, plat, hdl_root=None):
+    #    return hmc_xilinx_v7(blk, plat , hdl_root)
+
+    def instantiate_hbm(self, top, num=None):
+        
+        hbm = top.get_instance(name=self.fullname, entity='hbm')
+
+        hbm.add_port('USER_CLK', 'user_clk', dir='in')
+        hbm.add_port('USER_RST', 'user_rst', dir='in')
+        hbm.add_port('HBM_OK', '%s_hbm_ok' % self.fullname, dir='out')
+
+
+
+        # If HBM Memory Bank 0 selected then connect yellow block to AXI 3 to AXI 0 ports
+        if self.mem_bank == 0:
+            # AXI Interface Ports 0
+            inst.add_port('s_axi_0_araddr',  'm_axis_rx_TADD_Link0',   dir='out', width=32)
+            inst.add_port('s_axi_0_arready', 'm_axis_rx_TADD_READY_Link0',  dir='in', width=1)
+            inst.add_port('s_axi_0_arvalid', 'm_axis_rx_TADD_VALID_Link0',  dir='out', width=1)
+            inst.add_port('s_axi_0_awaddr',  's_axis_tx_TADD_Link0',   dir='out', width=32)
+            inst.add_port('s_axi_0_awready', 's_axis_tx_TADD_READY_Link0',  dir='in',  width=1)
+            inst.add_port('s_axi_0_awvalid', 's_axis_tx_TADD_VALID_Link0',  dir='out', width=1)
+            inst.add_port('s_axi_0_bready',  's_axis_tx_RESP_RDY_Link0',   dir='out', width=1)
+            inst.add_port('s_axi_0_bresp',   's_axis_tx_TRESP_Link0',    dir='in',  width=2)
+            inst.add_port('s_axi_0_bvalid',  's_axis_tx_RESP_VALID_Link0',   dir='in',  width=1)
+            inst.add_port('s_axi_0_rdata',   'm_axis_rx_TDATA_Link0',    dir='in',  width=256)
+            inst.add_port('s_axi_0_rready',  'm_axis_rx_TREADY_Link0',   dir='out', width=1)
+            inst.add_port('s_axi_0_rresp',   'm_axis_rx_TRESP_Link0',    dir='in',  width=2)
+            inst.add_port('s_axi_0_rvalid',  'm_axis_rx_TVALID_Link0',   dir='in',  width=1)
+            inst.add_port('s_axi_0_wdata',   's_axis_tx_TDATA_Link0',    dir='out', width=256)
+            inst.add_port('s_axi_0_wready',  's_axis_tx_TREADY_Link0',   dir='in',  width=1)
+            inst.add_port('s_axi_0_wstrb',   's_axis_tx_TSTROBE_Link0',  dir='out', width=32)
+            inst.add_port('s_axi_0_wvalid',  's_axis_tx_TVALID_Link0',   dir='out', width=1)
+            inst.add_port('s_axi_0_awsize',   's_axis_tx_TADD_SIZE_Link0', dir='out', width=3)
+            inst.add_port('s_axi_0_awlen',  's_axis_tx_TADD_LENGTH_Link0',   dir='out',  width=8)
+            inst.add_port('s_axi_0_awburst', 's_axis_tx_TADD_BURST_Link0',  dir='out', width=2)
+            inst.add_port('s_axi_0_awid',  's_axis_tx_TADD_ID_Link0',   dir='out', width=6)
+            inst.add_port('s_axi_0_bid',   's_axis_tx_TRESP_ID_Link0', dir='in', width=6)
+            inst.add_port('s_axi_0_wlast',  's_axis_tx_TLAST_Link0',   dir='out',  width=1)
+            inst.add_port('s_axi_0_arsize',   'm_axis_rx_TADD_SIZE_Link0', dir='out', width=3)
+            inst.add_port('s_axi_0_arlen',  'm_axis_rx_TADD_LENGTH_Link0',   dir='out',  width=8)
+            inst.add_port('s_axi_0_arburst', 'm_axis_rx_TADD_BURST_Link0',  dir='out', width=2)
+            inst.add_port('s_axi_0_arid',  'm_axis_rx_TADD_ID_Link0',   dir='out', width=6)
+            inst.add_port('s_axi_0_rid',  'm_axis_rx_TID_Link0',   dir='in',  width=6)
+            inst.add_port('s_axi_0_rlast', 'm_axis_rx_TLAST_Link0', dir='in', width=6)
+
+            # AXI Interface Ports 1
+
+            inst.add_port('s_axi_1_araddr', 'm_axis_rx_TADD_Link1', dir='out', width=32)
+            inst.add_port('s_axi_1_arready', 'm_axis_rx_TADD_READY_Link1', dir='in', width=1)
+            inst.add_port('s_axi_1_arvalid', 'm_axis_rx_TADD_VALID_Link1', dir='out', width=1)
+            inst.add_port('s_axi_1_awaddr', 's_axis_tx_TADD_Link1', dir='out', width=32)
+            inst.add_port('s_axi_1_awready', 's_axis_tx_TADD_READY_Link1', dir='in', width=1)
+            inst.add_port('s_axi_1_awvalid', 's_axis_tx_TADD_VALID_Link1', dir='out', width=1)
+            inst.add_port('s_axi_1_bready', 's_axis_tx_RESP_RDY_Link1', dir='out', width=1)
+            inst.add_port('s_axi_1_bresp', 's_axis_tx_TRESP_Link1', dir='in', width=2)
+            inst.add_port('s_axi_1_bvalid', 's_axis_tx_RESP_VALID_Link1', dir='in', width=1)
+            inst.add_port('s_axi_1_rdata', 'm_axis_rx_TDATA_Link1', dir='in', width=256)
+            inst.add_port('s_axi_1_rready', 'm_axis_rx_TREADY_Link1', dir='out', width=1)
+            inst.add_port('s_axi_1_rresp', 'm_axis_rx_TRESP_Link1', dir='in', width=2)
+            inst.add_port('s_axi_1_rvalid', 'm_axis_rx_TVALID_Link1', dir='in', width=1)
+            inst.add_port('s_axi_1_wdata', 's_axis_tx_TDATA_Link1', dir='out', width=256)
+            inst.add_port('s_axi_1_wready', 's_axis_tx_TREADY_Link1', dir='in', width=1)
+            inst.add_port('s_axi_1_wstrb', 's_axis_tx_TSTROBE_Link1', dir='out', width=32)
+            inst.add_port('s_axi_1_wvalid', 's_axis_tx_TVALID_Link1', dir='out', width=1)
+            inst.add_port('s_axi_1_awsize', 's_axis_tx_TADD_SIZE_Link1', dir='out', width=3)
+            inst.add_port('s_axi_1_awlen', 's_axis_tx_TADD_LENGTH_Link1', dir='out', width=8)
+            inst.add_port('s_axi_1_awburst', 's_axis_tx_TADD_BURST_Link1', dir='out', width=2)
+            inst.add_port('s_axi_1_awid', 's_axis_tx_TADD_ID_Link1', dir='out', width=6)
+            inst.add_port('s_axi_1_bid', 's_axis_tx_TRESP_ID_Link1', dir='in', width=6)
+            inst.add_port('s_axi_1_wlast', 's_axis_tx_TLAST_Link1', dir='out', width=1)
+            inst.add_port('s_axi_1_arsize', 'm_axis_rx_TADD_SIZE_Link1', dir='out', width=3)
+            inst.add_port('s_axi_1_arlen', 'm_axis_rx_TADD_LENGTH_Link1', dir='out', width=8)
+            inst.add_port('s_axi_1_arburst', 'm_axis_rx_TADD_BURST_Link1', dir='out', width=2)
+            inst.add_port('s_axi_1_arid', 'm_axis_rx_TADD_ID_Link1', dir='out', width=6)
+            inst.add_port('s_axi_1_rid', 'm_axis_rx_TID_Link1', dir='in', width=6)
+            inst.add_port('s_axi_1_rlast', 'm_axis_rx_TLAST_Link1', dir='in', width=6)
+
+            # AXI Interface Ports 2
+
+            inst.add_port('s_axi_2_araddr', 'm_axis_rx_TADD_Link2', dir='out', width=32)
+            inst.add_port('s_axi_2_arready', 'm_axis_rx_TADD_READY_Link2', dir='in', width=2)
+            inst.add_port('s_axi_2_arvalid', 'm_axis_rx_TADD_VALID_Link2', dir='out', width=2)
+            inst.add_port('s_axi_2_awaddr', 's_axis_tx_TADD_Link2', dir='out', width=32)
+            inst.add_port('s_axi_2_awready', 's_axis_tx_TADD_READY_Link2', dir='in', width=2)
+            inst.add_port('s_axi_2_awvalid', 's_axis_tx_TADD_VALID_Link2', dir='out', width=1)
+            inst.add_port('s_axi_2_bready', 's_axis_tx_RESP_RDY_Link2', dir='out', width=1)
+            inst.add_port('s_axi_2_bresp', 's_axis_tx_TRESP_Link2', dir='in', width=2)
+            inst.add_port('s_axi_2_bvalid', 's_axis_tx_RESP_VALID_Link2', dir='in', width=1)
+            inst.add_port('s_axi_2_rdata', 'm_axis_rx_TDATA_Link2', dir='in', width=256)
+            inst.add_port('s_axi_2_rready', 'm_axis_rx_TREADY_Link2', dir='out', width=1)
+            inst.add_port('s_axi_2_rresp', 'm_axis_rx_TRESP_Link2', dir='in', width=2)
+            inst.add_port('s_axi_2_rvalid', 'm_axis_rx_TVALID_Link2', dir='in', width=1)
+            inst.add_port('s_axi_2_wdata', 's_axis_tx_TDATA_Link2', dir='out', width=256)
+            inst.add_port('s_axi_2_wready', 's_axis_tx_TREADY_Link2', dir='in', width=1)
+            inst.add_port('s_axi_2_wstrb', 's_axis_tx_TSTROBE_Link2', dir='out', width=32)
+            inst.add_port('s_axi_2_wvalid', 's_axis_tx_TVALID_Link2', dir='out', width=1)
+            inst.add_port('s_axi_2_awsize', 's_axis_tx_TADD_SIZE_Link2', dir='out', width=3)
+            inst.add_port('s_axi_2_awlen', 's_axis_tx_TADD_LENGTH_Link2', dir='out', width=8)
+            inst.add_port('s_axi_2_awburst', 's_axis_tx_TADD_BURST_Link2', dir='out', width=2)
+            inst.add_port('s_axi_2_awid', 's_axis_tx_TADD_ID_Link2', dir='out', width=6)
+            inst.add_port('s_axi_2_bid', 's_axis_tx_TRESP_ID_Link2', dir='in', width=6)
+            inst.add_port('s_axi_2_wlast', 's_axis_tx_TLAST_Link2', dir='out', width=1)
+            inst.add_port('s_axi_2_arsize', 'm_axis_rx_TADD_SIZE_Link2', dir='out', width=3)
+            inst.add_port('s_axi_2_arlen', 'm_axis_rx_TADD_LENGTH_Link2', dir='out', width=8)
+            inst.add_port('s_axi_2_arburst', 'm_axis_rx_TADD_BURST_Link2', dir='out', width=2)
+            inst.add_port('s_axi_2_arid', 'm_axis_rx_TADD_ID_Link2', dir='out', width=6)
+            inst.add_port('s_axi_2_rid', 'm_axis_rx_TID_Link2', dir='in', width=6)
+            inst.add_port('s_axi_2_rlast', 'm_axis_rx_TLAST_Link2', dir='in', width=6)
+
+            # AXI Interface Ports 3
+
+            inst.add_port('s_axi_3_araddr', 'm_axis_rx_TADD_Link3', dir='out', width=32)
+            inst.add_port('s_axi_3_arready', 'm_axis_rx_TADD_READY_Link3', dir='in', width=2)
+            inst.add_port('s_axi_3_arvalid', 'm_axis_rx_TADD_VALID_Link3', dir='out', width=2)
+            inst.add_port('s_axi_3_awaddr', 's_axis_tx_TADD_Link3', dir='out', width=32)
+            inst.add_port('s_axi_3_awready', 's_axis_tx_TADD_READY_Link3', dir='in', width=2)
+            inst.add_port('s_axi_3_awvalid', 's_axis_tx_TADD_VALID_Link3', dir='out', width=1)
+            inst.add_port('s_axi_3_bready', 's_axis_tx_RESP_RDY_Link3', dir='out', width=1)
+            inst.add_port('s_axi_3_bresp', 's_axis_tx_TRESP_Link3', dir='in', width=2)
+            inst.add_port('s_axi_3_bvalid', 's_axis_tx_RESP_VALID_Link3', dir='in', width=1)
+            inst.add_port('s_axi_3_rdata', 'm_axis_rx_TDATA_Link3', dir='in', width=256)
+            inst.add_port('s_axi_3_rready', 'm_axis_rx_TREADY_Link3', dir='out', width=1)
+            inst.add_port('s_axi_3_rresp', 'm_axis_rx_TRESP_Link3', dir='in', width=2)
+            inst.add_port('s_axi_3_rvalid', 'm_axis_rx_TVALID_Link3', dir='in', width=1)
+            inst.add_port('s_axi_3_wdata', 's_axis_tx_TDATA_Link3', dir='out', width=256)
+            inst.add_port('s_axi_3_wready', 's_axis_tx_TREADY_Link3', dir='in', width=1)
+            inst.add_port('s_axi_3_wstrb', 's_axis_tx_TSTROBE_Link3', dir='out', width=32)
+            inst.add_port('s_axi_3_wvalid', 's_axis_tx_TVALID_Link3', dir='out', width=1)
+            inst.add_port('s_axi_3_awsize', 's_axis_tx_TADD_SIZE_Link3', dir='out', width=3)
+            inst.add_port('s_axi_3_awlen', 's_axis_tx_TADD_LENGTH_Link3', dir='out', width=8)
+            inst.add_port('s_axi_3_awburst', 's_axis_tx_TADD_BURST_Link3', dir='out', width=2)
+            inst.add_port('s_axi_3_awid', 's_axis_tx_TADD_ID_Link3', dir='out', width=6)
+            inst.add_port('s_axi_3_bid', 's_axis_tx_TRESP_ID_Link3', dir='in', width=6)
+            inst.add_port('s_axi_3_wlast', 's_axis_tx_TLAST_Link3', dir='out', width=1)
+            inst.add_port('s_axi_3_arsize', 'm_axis_rx_TADD_SIZE_Link3', dir='out', width=3)
+            inst.add_port('s_axi_3_arlen', 'm_axis_rx_TADD_LENGTH_Link3', dir='out', width=8)
+            inst.add_port('s_axi_3_arburst', 'm_axis_rx_TADD_BURST_Link3', dir='out', width=2)
+            inst.add_port('s_axi_3_arid', 'm_axis_rx_TADD_ID_Link3', dir='out', width=6)
+            inst.add_port('s_axi_3_rid', 'm_axis_rx_TID_Link3', dir='in', width=6)
+            inst.add_port('s_axi_3_rlast', 'm_axis_rx_TLAST_Link3', dir='in', width=6)
+
+        # If HBM Memory Bank 1 selected then connect yellow block to AXI 7 to AXI 4 ports
+        elif self.mem_bank == 1:
+
+            # AXI Interface Ports 4
+            inst.add_port('s_axi_4_araddr', 'm_axis_rx_TADD_Link0', dir='out', width=32)
+            inst.add_port('s_axi_4_arready', 'm_axis_rx_TADD_READY_Link0', dir='in', width=1)
+            inst.add_port('s_axi_4_arvalid', 'm_axis_rx_TADD_VALID_Link0', dir='out', width=1)
+            inst.add_port('s_axi_4_awaddr', 's_axis_tx_TADD_Link0', dir='out', width=32)
+            inst.add_port('s_axi_4_awready', 's_axis_tx_TADD_READY_Link0', dir='in', width=1)
+            inst.add_port('s_axi_4_awvalid', 's_axis_tx_TADD_VALID_Link0', dir='out', width=1)
+            inst.add_port('s_axi_4_bready', 's_axis_tx_RESP_RDY_Link0', dir='out', width=1)
+            inst.add_port('s_axi_4_bresp', 's_axis_tx_TRESP_Link0', dir='in', width=2)
+            inst.add_port('s_axi_4_bvalid', 's_axis_tx_RESP_VALID_Link0', dir='in', width=1)
+            inst.add_port('s_axi_4_rdata', 'm_axis_rx_TDATA_Link0', dir='in', width=256)
+            inst.add_port('s_axi_4_rready', 'm_axis_rx_TREADY_Link0', dir='out', width=1)
+            inst.add_port('s_axi_4_rresp', 'm_axis_rx_TRESP_Link0', dir='in', width=2)
+            inst.add_port('s_axi_4_rvalid', 'm_axis_rx_TVALID_Link0', dir='in', width=1)
+            inst.add_port('s_axi_4_wdata', 's_axis_tx_TDATA_Link0', dir='out', width=256)
+            inst.add_port('s_axi_4_wready', 's_axis_tx_TREADY_Link0', dir='in', width=1)
+            inst.add_port('s_axi_4_wstrb', 's_axis_tx_TSTROBE_Link0', dir='out', width=32)
+            inst.add_port('s_axi_4_wvalid', 's_axis_tx_TVALID_Link0', dir='out', width=1)
+            inst.add_port('s_axi_4_awsize', 's_axis_tx_TADD_SIZE_Link0', dir='out', width=3)
+            inst.add_port('s_axi_4_awlen', 's_axis_tx_TADD_LENGTH_Link0', dir='out', width=8)
+            inst.add_port('s_axi_4_awburst', 's_axis_tx_TADD_BURST_Link0', dir='out', width=2)
+            inst.add_port('s_axi_4_awid', 's_axis_tx_TADD_ID_Link0', dir='out', width=6)
+            inst.add_port('s_axi_4_bid', 's_axis_tx_TRESP_ID_Link0', dir='in', width=6)
+            inst.add_port('s_axi_4_wlast', 's_axis_tx_TLAST_Link0', dir='out', width=1)
+            inst.add_port('s_axi_4_arsize', 'm_axis_rx_TADD_SIZE_Link0', dir='out', width=3)
+            inst.add_port('s_axi_4_arlen', 'm_axis_rx_TADD_LENGTH_Link0', dir='out', width=8)
+            inst.add_port('s_axi_4_arburst', 'm_axis_rx_TADD_BURST_Link0', dir='out', width=2)
+            inst.add_port('s_axi_4_arid', 'm_axis_rx_TADD_ID_Link0', dir='out', width=6)
+            inst.add_port('s_axi_4_rid', 'm_axis_rx_TID_Link0', dir='in', width=6)
+            inst.add_port('s_axi_4_rlast', 'm_axis_rx_TLAST_Link0', dir='in', width=6)
+
+            # AXI Interface Ports 5
+
+            inst.add_port('s_axi_5_araddr', 'm_axis_rx_TADD_Link1', dir='out', width=32)
+            inst.add_port('s_axi_5_arready', 'm_axis_rx_TADD_READY_Link1', dir='in', width=1)
+            inst.add_port('s_axi_5_arvalid', 'm_axis_rx_TADD_VALID_Link1', dir='out', width=1)
+            inst.add_port('s_axi_5_awaddr', 's_axis_tx_TADD_Link1', dir='out', width=32)
+            inst.add_port('s_axi_5_awready', 's_axis_tx_TADD_READY_Link1', dir='in', width=1)
+            inst.add_port('s_axi_5_awvalid', 's_axis_tx_TADD_VALID_Link1', dir='out', width=1)
+            inst.add_port('s_axi_5_bready', 's_axis_tx_RESP_RDY_Link1', dir='out', width=1)
+            inst.add_port('s_axi_5_bresp', 's_axis_tx_TRESP_Link1', dir='in', width=2)
+            inst.add_port('s_axi_5_bvalid', 's_axis_tx_RESP_VALID_Link1', dir='in', width=1)
+            inst.add_port('s_axi_5_rdata', 'm_axis_rx_TDATA_Link1', dir='in', width=256)
+            inst.add_port('s_axi_5_rready', 'm_axis_rx_TREADY_Link1', dir='out', width=1)
+            inst.add_port('s_axi_5_rresp', 'm_axis_rx_TRESP_Link1', dir='in', width=2)
+            inst.add_port('s_axi_5_rvalid', 'm_axis_rx_TVALID_Link1', dir='in', width=1)
+            inst.add_port('s_axi_5_wdata', 's_axis_tx_TDATA_Link1', dir='out', width=256)
+            inst.add_port('s_axi_5_wready', 's_axis_tx_TREADY_Link1', dir='in', width=1)
+            inst.add_port('s_axi_5_wstrb', 's_axis_tx_TSTROBE_Link1', dir='out', width=32)
+            inst.add_port('s_axi_5_wvalid', 's_axis_tx_TVALID_Link1', dir='out', width=1)
+            inst.add_port('s_axi_5_awsize', 's_axis_tx_TADD_SIZE_Link1', dir='out', width=3)
+            inst.add_port('s_axi_5_awlen', 's_axis_tx_TADD_LENGTH_Link1', dir='out', width=8)
+            inst.add_port('s_axi_5_awburst', 's_axis_tx_TADD_BURST_Link1', dir='out', width=2)
+            inst.add_port('s_axi_5_awid', 's_axis_tx_TADD_ID_Link1', dir='out', width=6)
+            inst.add_port('s_axi_5_bid', 's_axis_tx_TRESP_ID_Link1', dir='in', width=6)
+            inst.add_port('s_axi_5_wlast', 's_axis_tx_TLAST_Link1', dir='out', width=1)
+            inst.add_port('s_axi_5_arsize', 'm_axis_rx_TADD_SIZE_Link1', dir='out', width=3)
+            inst.add_port('s_axi_5_arlen', 'm_axis_rx_TADD_LENGTH_Link1', dir='out', width=8)
+            inst.add_port('s_axi_5_arburst', 'm_axis_rx_TADD_BURST_Link1', dir='out', width=2)
+            inst.add_port('s_axi_5_arid', 'm_axis_rx_TADD_ID_Link1', dir='out', width=6)
+            inst.add_port('s_axi_5_rid', 'm_axis_rx_TID_Link1', dir='in', width=6)
+            inst.add_port('s_axi_5_rlast', 'm_axis_rx_TLAST_Link1', dir='in', width=6)
+
+            # AXI Interface Ports 6
+
+            inst.add_port('s_axi_6_araddr', 'm_axis_rx_TADD_Link2', dir='out', width=32)
+            inst.add_port('s_axi_6_arready', 'm_axis_rx_TADD_READY_Link2', dir='in', width=2)
+            inst.add_port('s_axi_6_arvalid', 'm_axis_rx_TADD_VALID_Link2', dir='out', width=2)
+            inst.add_port('s_axi_6_awaddr', 's_axis_tx_TADD_Link2', dir='out', width=32)
+            inst.add_port('s_axi_6_awready', 's_axis_tx_TADD_READY_Link2', dir='in', width=2)
+            inst.add_port('s_axi_6_awvalid', 's_axis_tx_TADD_VALID_Link2', dir='out', width=1)
+            inst.add_port('s_axi_6_bready', 's_axis_tx_RESP_RDY_Link2', dir='out', width=1)
+            inst.add_port('s_axi_6_bresp', 's_axis_tx_TRESP_Link2', dir='in', width=2)
+            inst.add_port('s_axi_6_bvalid', 's_axis_tx_RESP_VALID_Link2', dir='in', width=1)
+            inst.add_port('s_axi_6_rdata', 'm_axis_rx_TDATA_Link2', dir='in', width=256)
+            inst.add_port('s_axi_6_rready', 'm_axis_rx_TREADY_Link2', dir='out', width=1)
+            inst.add_port('s_axi_6_rresp', 'm_axis_rx_TRESP_Link2', dir='in', width=2)
+            inst.add_port('s_axi_6_rvalid', 'm_axis_rx_TVALID_Link2', dir='in', width=1)
+            inst.add_port('s_axi_6_wdata', 's_axis_tx_TDATA_Link2', dir='out', width=256)
+            inst.add_port('s_axi_6_wready', 's_axis_tx_TREADY_Link2', dir='in', width=1)
+            inst.add_port('s_axi_6_wstrb', 's_axis_tx_TSTROBE_Link2', dir='out', width=32)
+            inst.add_port('s_axi_6_wvalid', 's_axis_tx_TVALID_Link2', dir='out', width=1)
+            inst.add_port('s_axi_6_awsize', 's_axis_tx_TADD_SIZE_Link2', dir='out', width=3)
+            inst.add_port('s_axi_6_awlen', 's_axis_tx_TADD_LENGTH_Link2', dir='out', width=8)
+            inst.add_port('s_axi_6_awburst', 's_axis_tx_TADD_BURST_Link2', dir='out', width=2)
+            inst.add_port('s_axi_6_awid', 's_axis_tx_TADD_ID_Link2', dir='out', width=6)
+            inst.add_port('s_axi_6_bid', 's_axis_tx_TRESP_ID_Link2', dir='in', width=6)
+            inst.add_port('s_axi_6_wlast', 's_axis_tx_TLAST_Link2', dir='out', width=1)
+            inst.add_port('s_axi_6_arsize', 'm_axis_rx_TADD_SIZE_Link2', dir='out', width=3)
+            inst.add_port('s_axi_6_arlen', 'm_axis_rx_TADD_LENGTH_Link2', dir='out', width=8)
+            inst.add_port('s_axi_6_arburst', 'm_axis_rx_TADD_BURST_Link2', dir='out', width=2)
+            inst.add_port('s_axi_6_arid', 'm_axis_rx_TADD_ID_Link2', dir='out', width=6)
+            inst.add_port('s_axi_6_rid', 'm_axis_rx_TID_Link2', dir='in', width=6)
+            inst.add_port('s_axi_6_rlast', 'm_axis_rx_TLAST_Link2', dir='in', width=6)
+
+            # AXI Interface Ports 7
+
+            inst.add_port('s_axi_7_araddr', 'm_axis_rx_TADD_Link3', dir='out', width=32)
+            inst.add_port('s_axi_7_arready', 'm_axis_rx_TADD_READY_Link3', dir='in', width=2)
+            inst.add_port('s_axi_7_arvalid', 'm_axis_rx_TADD_VALID_Link3', dir='out', width=2)
+            inst.add_port('s_axi_7_awaddr', 's_axis_tx_TADD_Link3', dir='out', width=32)
+            inst.add_port('s_axi_7_awready', 's_axis_tx_TADD_READY_Link3', dir='in', width=2)
+            inst.add_port('s_axi_7_awvalid', 's_axis_tx_TADD_VALID_Link3', dir='out', width=1)
+            inst.add_port('s_axi_7_bready', 's_axis_tx_RESP_RDY_Link3', dir='out', width=1)
+            inst.add_port('s_axi_7_bresp', 's_axis_tx_TRESP_Link3', dir='in', width=2)
+            inst.add_port('s_axi_7_bvalid', 's_axis_tx_RESP_VALID_Link3', dir='in', width=1)
+            inst.add_port('s_axi_7_rdata', 'm_axis_rx_TDATA_Link3', dir='in', width=256)
+            inst.add_port('s_axi_7_rready', 'm_axis_rx_TREADY_Link3', dir='out', width=1)
+            inst.add_port('s_axi_7_rresp', 'm_axis_rx_TRESP_Link3', dir='in', width=2)
+            inst.add_port('s_axi_7_rvalid', 'm_axis_rx_TVALID_Link3', dir='in', width=1)
+            inst.add_port('s_axi_7_wdata', 's_axis_tx_TDATA_Link3', dir='out', width=256)
+            inst.add_port('s_axi_7_wready', 's_axis_tx_TREADY_Link3', dir='in', width=1)
+            inst.add_port('s_axi_7_wstrb', 's_axis_tx_TSTROBE_Link3', dir='out', width=32)
+            inst.add_port('s_axi_7_wvalid', 's_axis_tx_TVALID_Link3', dir='out', width=1)
+            inst.add_port('s_axi_7_awsize', 's_axis_tx_TADD_SIZE_Link3', dir='out', width=3)
+            inst.add_port('s_axi_7_awlen', 's_axis_tx_TADD_LENGTH_Link3', dir='out', width=8)
+            inst.add_port('s_axi_7_awburst', 's_axis_tx_TADD_BURST_Link3', dir='out', width=2)
+            inst.add_port('s_axi_7_awid', 's_axis_tx_TADD_ID_Link3', dir='out', width=6)
+            inst.add_port('s_axi_7_bid', 's_axis_tx_TRESP_ID_Link3', dir='in', width=6)
+            inst.add_port('s_axi_7_wlast', 's_axis_tx_TLAST_Link3', dir='out', width=1)
+            inst.add_port('s_axi_7_arsize', 'm_axis_rx_TADD_SIZE_Link3', dir='out', width=3)
+            inst.add_port('s_axi_7_arlen', 'm_axis_rx_TADD_LENGTH_Link3', dir='out', width=8)
+            inst.add_port('s_axi_7_arburst', 'm_axis_rx_TADD_BURST_Link3', dir='out', width=2)
+            inst.add_port('s_axi_7_arid', 'm_axis_rx_TADD_ID_Link3', dir='out', width=6)
+            inst.add_port('s_axi_7_rid', 'm_axis_rx_TID_Link3', dir='in', width=6)
+            inst.add_port('s_axi_7_rlast', 'm_axis_rx_TLAST_Link3', dir='in', width=6)
+
+        else:
+            self.logger.error('Invalid HBM Memory Bank selected for HBM. Cannot connect to HBM memory bank')
+
+        # Simulink ports Link0
+
+        hbm.add_port('RD_REQ_LINK0', '%s_rd_en_link0' % self.fullname, dir='in')
+        hbm.add_port('WR_REQ_LINK0', '%s_wr_en_link0' % self.fullname, dir='in')
+        hbm.add_port('WR_ADDRESS_LINK0', '%s_wr_address_link0' % self.fullname, dir='in', width=27)
+        hbm.add_port('DATA_IN_LINK0', '%s_data_in_link0' % self.fullname, dir='in', width=256)
+        hbm.add_port('RD_ADDRESS_LINK0', '%s_rd_address_link0' % self.fullname, dir='in', width=27)
+        hbm.add_port('DATA_OUT_LINK0', '%s_data_out_link0' % self.fullname, dir='out', width=256)
+        hbm.add_port('TAG_OUT_LINK0', '%s_rd_tag_out_link0' % self.fullname, dir='out', width=9)
+        hbm.add_port('TAG_IN_LINK0', '%s_rd_tag_in_link0' % self.fullname, dir='in', width=9)
+        hbm.add_port('DATA_VALID_LINK0', '%s_data_valid_link0' % self.fullname, dir='out')
+        hbm.add_port('RD_READY_LINK0', '%s_rd_ready_link0' % self.fullname, dir='out')
+        hbm.add_port('WR_READY_LINK0', '%s_wr_ready_link0' % self.fullname, dir='out')
+
+
+        # Simulink ports Link1
+
+        hbm.add_port('RD_REQ_LINK1', '%s_rd_en_link1' % self.fullname, dir='in')
+        hbm.add_port('WR_REQ_LINK1', '%s_wr_en_link1' % self.fullname, dir='in')
+        hbm.add_port('WR_ADDRESS_LINK1', '%s_wr_address_link1' % self.fullname, dir='in', width=27)
+        hbm.add_port('DATA_IN_LINK1', '%s_data_in_link1' % self.fullname, dir='in', width=256)
+        hbm.add_port('RD_ADDRESS_LINK1', '%s_rd_address_link1' % self.fullname, dir='in', width=27)
+        hbm.add_port('DATA_OUT_LINK1', '%s_data_out_link1' % self.fullname, dir='out', width=256)
+        hbm.add_port('TAG_OUT_LINK1', '%s_rd_tag_out_link1' % self.fullname, dir='out', width=9)
+        hbm.add_port('TAG_IN_LINK1', '%s_rd_tag_in_link1' % self.fullname, dir='in', width=9)
+        hbm.add_port('DATA_VALID_LINK1', '%s_data_valid_link1' % self.fullname, dir='out')
+        hbm.add_port('RD_READY_LINK1', '%s_rd_ready_link1' % self.fullname, dir='out')
+        hbm.add_port('WR_READY_LINK1', '%s_wr_ready_link1' % self.fullname, dir='out')
+
+
+        # Simulink ports Link2
+
+        hbm.add_port('RD_REQ_LINK2', '%s_rd_en_link2' % self.fullname, dir='in')
+        hbm.add_port('WR_REQ_LINK2', '%s_wr_en_link2' % self.fullname, dir='in')
+        hbm.add_port('WR_ADDRESS_LINK2', '%s_wr_address_link2' % self.fullname, dir='in', width=27)
+        hbm.add_port('DATA_IN_LINK2', '%s_data_in_link2' % self.fullname, dir='in', width=256)
+        hbm.add_port('RD_ADDRESS_LINK2', '%s_rd_address_link2' % self.fullname, dir='in', width=27)
+        hbm.add_port('DATA_OUT_LINK2', '%s_data_out_link2' % self.fullname, dir='out', width=256)
+        hbm.add_port('TAG_OUT_LINK2', '%s_rd_tag_out_link2' % self.fullname, dir='out', width=9)
+        hbm.add_port('TAG_IN_LINK2', '%s_rd_tag_in_link2' % self.fullname, dir='in', width=9)
+        hbm.add_port('DATA_VALID_LINK2', '%s_data_valid_link2' % self.fullname, dir='out')
+        hbm.add_port('RD_READY_LINK2', '%s_rd_ready_link2' % self.fullname, dir='out')
+        hbm.add_port('WR_READY_LINK2', '%s_wr_ready_link2' % self.fullname, dir='out')
+
+        # Simulink ports Link3
+
+        hbm.add_port('RD_REQ_LINK3', '%s_rd_en_link3' % self.fullname, dir='in')
+        hbm.add_port('WR_REQ_LINK3', '%s_wr_en_link3' % self.fullname, dir='in')
+        hbm.add_port('WR_ADDRESS_LINK3', '%s_wr_address_link3' % self.fullname, dir='in', width=27)
+        hbm.add_port('DATA_IN_LINK3', '%s_data_in_link3' % self.fullname, dir='in', width=256)
+        hbm.add_port('RD_ADDRESS_LINK3', '%s_rd_address_link3' % self.fullname, dir='in', width=27)
+        hbm.add_port('DATA_OUT_LINK3', '%s_data_out_link3' % self.fullname, dir='out', width=256)
+        hbm.add_port('TAG_OUT_LINK3', '%s_rd_tag_out_link3' % self.fullname, dir='out', width=9)
+        hbm.add_port('TAG_IN_LINK3', '%s_rd_tag_in_link3' % self.fullname, dir='in', width=9)
+        hbm.add_port('DATA_VALID_LINK3', '%s_data_valid_link3' % self.fullname, dir='out')
+        hbm.add_port('RD_READY_LINK3', '%s_rd_ready_link3' % self.fullname, dir='out')
+        hbm.add_port('WR_READY_LINK3', '%s_wr_ready_link3' % self.fullname, dir='out')
+
+
+    def initialize(self):
+
+        self.add_source('hbm/*.v')
+        # This block takes an HBM memory bank site and should prevent other blocks from using it
+        self.exc_requires = ['hbm_mem_bank%d' % self.mem_bank]
+
+    def modify_top(self,top):
+
+        self.instantiate_hbm(top)
+        #top.assign_signal('mez%s_init_done' % self.mez, '%s_init_done' % self.fullname)
+        #top.assign_signal('mez%s_post_ok' % self.mez, '%s_post_ok' % self.fullname)
+
+    def gen_constraints(self):
+        cons = []
+
+        #cons.append(PortConstraint('MEZZANINE_%s_RESET' % self.mez,'MEZZANINE_%s_RESET' % self.mez))
+        #cons.append(PortConstraint('MEZZANINE_%s_CLK_SEL' % self.mez, 'MEZZANINE_%s_CLK_SEL' % self.mez))
+        #cons.append(PortConstraint('MEZ%s_REFCLK_0_P' % self.mez, 'MEZ%s_REFCLK_0_P' % self.mez))
+        #cons.append(PortConstraint('MEZ%s_REFCLK_0_N' % self.mez, 'MEZ%s_REFCLK_0_N' % self.mez))
+        #cons.append(PortConstraint('MEZ%s_REFCLK_1_P' % self.mez, 'MEZ%s_REFCLK_1_P' % self.mez))
+        #cons.append(PortConstraint('MEZ%s_REFCLK_1_N' % self.mez, 'MEZ%s_REFCLK_1_N' % self.mez))
+        #cons.append(PortConstraint('MEZ%s_REFCLK_2_P' % self.mez, 'MEZ%s_REFCLK_2_P' % self.mez))
+        #cons.append(PortConstraint('MEZ%s_REFCLK_2_N' % self.mez, 'MEZ%s_REFCLK_2_N' % self.mez))
+        #cons.append(PortConstraint('MEZ%s_REFCLK_3_P' % self.mez, 'MEZ%s_REFCLK_3_P' % self.mez))
+        #cons.append(PortConstraint('MEZ%s_REFCLK_3_N' % self.mez, 'MEZ%s_REFCLK_3_N' % self.mez))
+        #cons.append(PortConstraint('MEZ%s_PHY11_LANE_TX_P' % self.mez, 'MEZ%s_PHY11_LANE_TX_P' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY11_LANE_TX_N' % self.mez, 'MEZ%s_PHY11_LANE_TX_N' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY12_LANE_TX_P' % self.mez, 'MEZ%s_PHY12_LANE_TX_P' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY12_LANE_TX_N' % self.mez, 'MEZ%s_PHY12_LANE_TX_N' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY21_LANE_TX_P' % self.mez, 'MEZ%s_PHY21_LANE_TX_P' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY21_LANE_TX_N' % self.mez, 'MEZ%s_PHY21_LANE_TX_N' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY22_LANE_TX_P' % self.mez, 'MEZ%s_PHY22_LANE_TX_P' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY22_LANE_TX_N' % self.mez, 'MEZ%s_PHY22_LANE_TX_N' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY11_LANE_RX_P' % self.mez, 'MEZ%s_PHY11_LANE_RX_P' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY11_LANE_RX_N' % self.mez, 'MEZ%s_PHY11_LANE_RX_N' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY12_LANE_RX_P' % self.mez, 'MEZ%s_PHY12_LANE_RX_P' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY12_LANE_RX_N' % self.mez, 'MEZ%s_PHY12_LANE_RX_N' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY21_LANE_RX_P' % self.mez, 'MEZ%s_PHY21_LANE_RX_P' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY21_LANE_RX_N' % self.mez, 'MEZ%s_PHY21_LANE_RX_N' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY22_LANE_RX_P' % self.mez, 'MEZ%s_PHY22_LANE_RX_P' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+        #cons.append(PortConstraint('MEZ%s_PHY22_LANE_RX_N' % self.mez, 'MEZ%s_PHY22_LANE_RX_N' % self.mez, port_index=list(range(4)), iogroup_index=list(range(4))))
+
+        # GTH Clock Constraints
+        #cons.append(RawConstraint('create_clock -period 6.400 -waveform {0.000 3.200} [get_ports MEZ%s_REFCLK_0_P]' % self.mez))
+        #cons.append(ClockConstraint('MEZ%s_REFCLK_0_P' % self.mez,'MEZ%s_REFCLK_0_P' % self.mez, period=6.4, port_en=True, virtual_en=False, waveform_min=0.0, waveform_max=3.2))
+        #cons.append(RawConstraint('create_clock -period 6.400 -waveform {0.000 3.200} [get_ports MEZ%s_REFCLK_1_P]' % self.mez))
+        #cons.append(ClockConstraint('MEZ%s_REFCLK_1_P' % self.mez,'MEZ%s_REFCLK_1_P' % self.mez, period=6.4, port_en=True, virtual_en=False, waveform_min=0.0, waveform_max=3.2))
+        #cons.append(RawConstraint('create_clock -period 6.400 -waveform {0.000 3.200} [get_ports MEZ%s_REFCLK_2_P]' % self.mez))
+        #cons.append(ClockConstraint('MEZ%s_REFCLK_2_P' % self.mez,'MEZ%s_REFCLK_2_P' % self.mez, period=6.4, port_en=True, virtual_en=False, waveform_min=0.0, waveform_max=3.2))
+        #cons.append(RawConstraint('create_clock -period 6.400 -waveform {0.000 3.200} [get_ports MEZ%s_REFCLK_3_P]' % self.mez))
+        #cons.append(ClockConstraint('MEZ%s_REFCLK_3_P' % self.mez,'MEZ%s_REFCLK_3_P' % self.mez, period=6.4, port_en=True, virtual_en=False, waveform_min=0.0, waveform_max=3.2))
+
+
+        # *******************************************************************************************************
+        # HBM Link Timing Constraints
+        # *******************************************************************************************************
+
+        # GTH Tx Clock Constraints (This clock is the reference clock for the TX side of all 8 GTHs)
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_hmc_gth_i/gthe2_i/TXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_hmc_gth_i/gthe2_i/TXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False,  waveform_min=0.0, waveform_max=1.6))
+
+        # GTH Rx Clock Constraints (Rx clock phase is unique for each receiver => generate a constraint for each GTH)
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt1_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt1_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt1_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt1_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt2_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt2_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt2_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt2_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt3_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt3_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt3_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt3_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt4_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt4_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt4_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt4_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt5_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt5_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt5_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt5_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt6_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt6_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt6_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt6_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt7_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt7_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt7_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt7_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+
+        # cut paths between GTH Tx Clock and GTH Rx Clocks (async fifo crossing) from Rx to Tx clock
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt1_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt1_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt2_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt2_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt3_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt3_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt4_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt4_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt5_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt5_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt6_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt6_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt7_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt7_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+
+        # cut paths between GTH Tx Clock and GTH Rx Clocks (async fifo crossing) from Tx to Rx clock
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt1_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt1_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt2_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt2_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt3_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt3_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt4_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt4_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt5_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt5_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt6_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt6_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt7_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt7_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+
+        #Cut paths between GTH Tx Clock and HMC Static Clock (forty_gbe)
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '-of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT0]','asynchronous'))
+
+        #Cut paths between HMC Static Clock (forty_gbe) and GTH Tx Clock
+        #cons.append(ClockGroupConstraint(' -of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT0]', '-include_generated_clocks %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, 'asynchronous'))
+
+        #Cut paths between HMC and forty_gbe clocks
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname, '-of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]','asynchronous'))
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]', '-of_objects [get_pins %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname,'asynchronous'))
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname, '-of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT1]','asynchronous'))
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT1]', '-of_objects [get_pins %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname,'asynchronous'))
+
+        #Cut paths between HMC Link 2 and Link 3 clocks
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname, '-of_objects [get_pins %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname,'asynchronous'))
+
+        #Cut paths between SYS_CLK_MMCM_inst/CLKOUT0 and HMC Link 2 clocks
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT0]', '-of_objects [get_pins %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname,'asynchronous'))
+
+        #Cut paths between skarab_infr/USER_CLK_MMCM_inst/CLKOUT0] and HMC Link 2 clocks
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname, '-of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]','asynchronous'))
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]', '-of_objects [get_pins %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname,'asynchronous'))
+
+
+        # *******************************************************************************************************
+        # HBM Link Timing Constraints
+        # *******************************************************************************************************
+
+        # GTH Tx Clock Constraints (This clock is the reference clock for the TX side of all 8 GTHs)
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_hmc_gth_i/gthe2_i/TXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_hmc_gth_i/gthe2_i/TXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+
+        # GTH Rx Clock Constraints (Rx clock phase is unique for each receiver => generate a constraint for each GTH)
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt1_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt1_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt1_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt1_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt2_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt2_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt2_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt2_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt3_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt3_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt3_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt3_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt4_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt4_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt4_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt4_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt5_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt5_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt5_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt5_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt6_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt6_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt6_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt6_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+        #cons.append(RawConstraint('create_clock -period 3.200 -name '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt7_hmc_gth_i/gt0_rxoutclk_i -waveform {0.000 1.600} [get_pins '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt7_hmc_gth_i/gthe2_i/RXOUTCLK]'))
+        #cons.append(ClockConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt7_hmc_gth_i/gthe2_i/RXOUTCLK'% self.fullname,'%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt7_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, period=3.2, port_en=False, virtual_en=False, waveform_min=0.0, waveform_max=1.6))
+
+        # cut paths between GTH Tx Clock and GTH Rx Clocks (async fifo crossing) from Rx to Tx clock
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt1_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt1_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt2_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt2_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt3_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt3_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt4_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt4_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt5_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt5_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt6_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt6_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt7_hmc_gth_i/gt0_rxoutclk_i] -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i]'))
+        #cons.append(ClockGroupConstraint('%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt7_hmc_gth_i/gt0_rxoutclk_i' % self.fullname, '-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname,'asynchronous'))
+
+        # cut paths between GTH Tx Clock and GTH Rx Clocks (async fifo crossing) from Tx to Rx clock
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt1_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt1_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt2_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt2_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt3_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt3_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt4_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt4_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt5_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt5_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt6_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt6_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+        #cons.append(RawConstraint('set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i] -group [get_clocks '+self.fullname+'/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt7_hmc_gth_i/gt0_rxoutclk_i]'))
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '%s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt7_hmc_gth_i/gt0_rxoutclk_i' % self.fullname,'asynchronous'))
+
+        #Cut paths between GTH Tx Clock and HMC Static Clock (forty_gbe)
+        #cons.append(ClockGroupConstraint('-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, '-of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT0]','asynchronous'))
+
+        #Cut paths between HMC Static Clock (forty_gbe) and GTH Tx Clock
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT0]', '-include_generated_clocks %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/gt0_txoutclk_i' % self.fullname, 'asynchronous'))
+
+        #Cut paths between HMC and forty_gbe clocks
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname, '-of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]','asynchronous'))
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]', '-of_objects [get_pins %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname,'asynchronous'))
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname, '-of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT1]','asynchronous'))
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT1]', '-of_objects [get_pins %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname,'asynchronous'))
+
+        #Cut paths between HMC Link 3 and HMC Link 2 clocks
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname, '-of_objects [get_pins %s/hmc_ska_sa_top_link2_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname,'asynchronous'))
+
+        #Cut paths between SYS_CLK_MMCM_inst/CLKOUT0 and HMC Link 3 clocks
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT0]', '-of_objects [get_pins %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname,'asynchronous'))
+
+        #Cut paths between skarab_infr/USER_CLK_MMCM_inst/CLKOUT0] and HMC Link 2 clocks
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname, '-of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]','asynchronous'))
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]', '-of_objects [get_pins %s/hmc_ska_sa_top_link3_inst/hmc_gth_inst/txoutclk_mmcm0_inst/mmcm_adv_inst/CLKOUT0]' % self.fullname,'asynchronous'))
+
+
+        #Timing Constraints
+        #Output Constraints
+        #cons.append(OutputDelayConstraint(clkname='-of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]', consttype='min', constdelay_ns=1.0, add_delay_en=True, portname='MEZZANINE_%s_RESET' % self.mez))
+        #cons.append(OutputDelayConstraint(clkname='-of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]', consttype='max', constdelay_ns=2.0, add_delay_en=True, portname='MEZZANINE_%s_RESET' % self.mez))
+        #cons.append(OutputDelayConstraint(clkname='-of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT1]', consttype='min', constdelay_ns=1.0, add_delay_en=True, portname='MEZZANINE_%s_RESET' % self.mez))
+        #cons.append(OutputDelayConstraint(clkname='-of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT1]', consttype='max', constdelay_ns=2.0, add_delay_en=True, portname='MEZZANINE_%s_RESET' % self.mez))
+
+        #multi-cycle constraints
+        #cons.append(MultiCycleConstraint(multicycletype='setup',sourcepath='get_clocks -of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]', destpath='get_ports MEZZANINE_%s_RESET' % self.mez, multicycledelay=4))
+        #cons.append(MultiCycleConstraint(multicycletype='hold',sourcepath='get_clocks -of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]', destpath='get_ports MEZZANINE_%s_RESET' % self.mez, multicycledelay=3))
+        #cons.append(MultiCycleConstraint(multicycletype='setup',sourcepath='get_clocks -of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT0]', destpath='get_ports MEZZANINE_%s_RESET' % self.mez, multicycledelay=4))
+        #cons.append(MultiCycleConstraint(multicycletype='hold',sourcepath='get_clocks -of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT0]', destpath='get_ports MEZZANINE_%s_RESET' % self.mez, multicycledelay=3))
+
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT0]', '-of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]', 'asynchronous'))
+        #cons.append(ClockGroupConstraint('-of_objects [get_pins */USER_CLK_MMCM_inst/CLKOUT0]' ,' -of_objects [get_pins */SYS_CLK_MMCM_inst/CLKOUT0]', 'asynchronous'))
+
+
+        #Placement constraints
+        #Link 2 and Link3
+        #cons.append(RawConstraint('create_pblock MEZ%s_HMC' % self.mez))
+        #cons.append(RawConstraint('add_cells_to_pblock [get_pblocks MEZ%s_HMC]' % self.mez + ' [get_cells -quiet [list '+self.fullname+'/flit_gen_link2_inst]]'))
+        #cons.append(RawConstraint('add_cells_to_pblock [get_pblocks MEZ%s_HMC]' % self.mez + ' [get_cells -quiet [list '+self.fullname+'/flit_gen_user_link2_inst]]'))
+        #cons.append(RawConstraint('add_cells_to_pblock [get_pblocks MEZ%s_HMC]' % self.mez + ' [get_cells -quiet [list '+self.fullname+'/hmc_ska_sa_top_link2_inst]]'))
+        #cons.append(RawConstraint('add_cells_to_pblock [get_pblocks MEZ%s_HMC]' % self.mez + ' [get_cells -quiet [list ' + self.fullname + '/flit_gen_link3_inst]]'))
+        #cons.append(RawConstraint('add_cells_to_pblock [get_pblocks MEZ%s_HMC]' % self.mez + ' [get_cells -quiet [list ' + self.fullname + '/flit_gen_user_link3_inst]]'))
+        #cons.append(RawConstraint('add_cells_to_pblock [get_pblocks MEZ%s_HMC]' % self.mez + ' [get_cells -quiet [list ' + self.fullname + '/hmc_ska_sa_top_link3_inst]]'))
+        #Mez 0 Selected
+        #if self.mez == 0:
+        #  cons.append(RawConstraint('resize_pblock [get_pblocks MEZ%s_HMC] -add {CLOCKREGION_X0Y4:CLOCKREGION_X0Y7}' % self.mez))
+        #Mez 1 Selected
+        #elif self.mez == 1:
+        #  cons.append(RawConstraint('resize_pblock [get_pblocks MEZ%s_HMC] -add {CLOCKREGION_X0Y0:CLOCKREGION_X0Y3}' % self.mez))
+        #Mez 2 Selected
+        #elif self.mez == 2:
+        #  cons.append(RawConstraint('resize_pblock [get_pblocks MEZ%s_HMC] -add {CLOCKREGION_X1Y0:CLOCKREGION_X1Y3}' % self.mez))
+        #else:
+        #    self.logger.error('Invalid Mezzanine site selected for HMC. Placement ignored for HMC')
+
+        return cons
