@@ -18,7 +18,8 @@ module hbm_custom_to_axis_if #(
     //Define HBM interface width
     parameter NUM_DATA_BYTES        = 32,   //Leave untouched
     parameter AWIDTH                = 27,
-    parameter TWIDTH                = 9,
+    parameter TWIDTH                = 9,  //Tag Width
+    parameter ATWIDTH               = 6,  //AXI Tag Width
     // AXI Interface 
     parameter AXI_ADD_WIDTH         = 32
 )(
@@ -99,8 +100,8 @@ module hbm_custom_to_axis_if #(
     input   wire                         s_axis_tx_TADD_READY_Link0, //Write address Ready
     output  wire [7:0]                   s_axis_tx_TADD_LENGTH_Link0, //write address Length (burst length = 1 = "00000001")
     output  wire [1:0]                   s_axis_tx_TADD_BURST_Link0, //write addresss Burst (BURST TYPE = INC = "01")      
-    output  wire [TWIDTH-1:0]            s_axis_tx_TADD_ID_Link0, //Write address ID
-    input   wire [TWIDTH-1:0]            s_axis_tx_TRESP_ID_Link0, //Write Response ID
+    output  wire [ATWIDTH-1:0]           s_axis_tx_TADD_ID_Link0, //Write address ID
+    input   wire [ATWIDTH-1:0]           s_axis_tx_TRESP_ID_Link0, //Write Response ID
     input   wire [1:0]                   s_axis_tx_TRESP_Link0, //Write Data Response ("00" - Okay, "01" - read or write okay, "10" - subordinate error, decode error "11")
     input   wire                         s_axis_tx_RESP_VALID_Link0, //Write response valid
     output  wire                         s_axis_tx_RESP_RDY_Link0, //Write Response Ready   
@@ -111,12 +112,12 @@ module hbm_custom_to_axis_if #(
     output  wire                         m_axis_rx_TREADY_Link0, //Read Data Ready
     input   wire [DWIDTH-1:0]            m_axis_rx_TDATA_Link0, //Read Data
     output  wire [AXI_ADD_WIDTH-1:0]     m_axis_rx_TADD_Link0, //Read Data Address
-    input   wire [TWIDTH-1:0]            m_axis_rx_TID_Link0, //Read Data 
+    input   wire [ATWIDTH-1:0]           m_axis_rx_TID_Link0, //Read Data
     output  wire [1:0]                   m_axis_rx_TADD_BURST_Link0, //read addresss Burst (BURST TYPE = INC = "01")
     output  wire [2:0]                   m_axis_rx_TADD_SIZE_Link0,  //Read address size (bytes in transfer = 32, "101")
     input   wire                         m_axis_rx_TADD_READY_Link0, //Read address Ready
     output  wire [7:0]                   m_axis_rx_TADD_LENGTH_Link0, //Read address Length (burst length = 1 = "00000001")
-    output  wire [TWIDTH-1:0]            m_axis_rx_TADD_ID_Link0, //Read Address ID
+    output  wire [ATWIDTH-1:0]           m_axis_rx_TADD_ID_Link0, //Read Address ID
     output  wire                         m_axis_rx_TADD_VALID_Link0, //Read Address valid
     input   wire [1:0]                   m_axis_rx_TRESP_Link0, //Read Data Response ("00" - Okay, "01" - read or write okay, "10" - subordinate error, decode error "11")
     input   wire                         m_axis_rx_TLAST_Link0, //Read Data Last
@@ -134,8 +135,8 @@ module hbm_custom_to_axis_if #(
     input   wire                         s_axis_tx_TADD_READY_Link1, //Write address Ready
     output  wire [7:0]                   s_axis_tx_TADD_LENGTH_Link1, //write address Length (burst length = 1 = "00000001")
     output  wire [1:0]                   s_axis_tx_TADD_BURST_Link1, //write addresss Burst (BURST TYPE = INC = "01")      
-    output  wire [TWIDTH-1:0]            s_axis_tx_TADD_ID_Link1, //Write address ID
-    input   wire [TWIDTH-1:0]            s_axis_tx_TRESP_ID_Link1, //Write Response ID
+    output  wire [ATWIDTH-1:0]           s_axis_tx_TADD_ID_Link1, //Write address ID
+    input   wire [ATWIDTH-1:0]           s_axis_tx_TRESP_ID_Link1, //Write Response ID
     input   wire [1:0]                   s_axis_tx_TRESP_Link1, //Write Data Response ("00" - Okay, "01" - read or write okay, "10" - subordinate error, decode error "11")
     input   wire                         s_axis_tx_RESP_VALID_Link1, //Write response valid
     output  wire                         s_axis_tx_RESP_RDY_Link1, //Write Response Ready   
@@ -146,12 +147,12 @@ module hbm_custom_to_axis_if #(
     output  wire                         m_axis_rx_TREADY_Link1, //Read Data Ready
     input   wire [DWIDTH-1:0]            m_axis_rx_TDATA_Link1, //Read Data
     output  wire [AXI_ADD_WIDTH-1:0]     m_axis_rx_TADD_Link1, //Read Data Address
-    input   wire [TWIDTH-1:0]            m_axis_rx_TID_Link1, //Read Data 
+    input   wire [ATWIDTH-1:0]           m_axis_rx_TID_Link1, //Read Data
     output  wire [1:0]                   m_axis_rx_TADD_BURST_Link1, //read addresss Burst (BURST TYPE = INC = "01")
     output  wire [2:0]                   m_axis_rx_TADD_SIZE_Link1,  //Read address size (bytes in transfer = 32, "101")
     input   wire                         m_axis_rx_TADD_READY_Link1, //Read address Ready
     output  wire [7:0]                   m_axis_rx_TADD_LENGTH_Link1, //Read address Length (burst length = 1 = "00000001")
-    output  wire [TWIDTH-1:0]            m_axis_rx_TADD_ID_Link1, //Read Address ID
+    output  wire [ATWIDTH-1:0]           m_axis_rx_TADD_ID_Link1, //Read Address ID
     output  wire                         m_axis_rx_TADD_VALID_Link1, //Read Address valid
     input   wire [1:0]                   m_axis_rx_TRESP_Link1, //Read Data Response ("00" - Okay, "01" - read or write okay, "10" - subordinate error, decode error "11")
     input   wire                         m_axis_rx_TLAST_Link1, //Read Data Last
@@ -169,8 +170,8 @@ module hbm_custom_to_axis_if #(
     input   wire                         s_axis_tx_TADD_READY_Link2, //Write address Ready
     output  wire [7:0]                   s_axis_tx_TADD_LENGTH_Link2, //write address Length (burst length = 1 = "00000001")
     output  wire [1:0]                   s_axis_tx_TADD_BURST_Link2, //write addresss Burst (BURST TYPE = INC = "01")      
-    output  wire [TWIDTH-1:0]            s_axis_tx_TADD_ID_Link2, //Write address ID
-    input   wire [TWIDTH-1:0]            s_axis_tx_TRESP_ID_Link2, //Write Response ID
+    output  wire [ATWIDTH-1:0]           s_axis_tx_TADD_ID_Link2, //Write address ID
+    input   wire [ATWIDTH-1:0]           s_axis_tx_TRESP_ID_Link2, //Write Response ID
     input   wire [1:0]                   s_axis_tx_TRESP_Link2, //Write Data Response ("00" - Okay, "01" - read or write okay, "10" - subordinate error, decode error "11")
     input   wire                         s_axis_tx_RESP_VALID_Link2, //Write response valid
     output  wire                         s_axis_tx_RESP_RDY_Link2, //Write Response Ready   
@@ -181,12 +182,12 @@ module hbm_custom_to_axis_if #(
     output  wire                         m_axis_rx_TREADY_Link2, //Read Data Ready
     input   wire [DWIDTH-1:0]            m_axis_rx_TDATA_Link2, //Read Data
     output  wire [AXI_ADD_WIDTH-1:0]     m_axis_rx_TADD_Link2, //Read Data Address
-    input   wire [TWIDTH-1:0]            m_axis_rx_TID_Link2, //Read Data 
+    input   wire [ATWIDTH-1:0]           m_axis_rx_TID_Link2, //Read Data
     output  wire [1:0]                   m_axis_rx_TADD_BURST_Link2, //read addresss Burst (BURST TYPE = INC = "01")
     output  wire [2:0]                   m_axis_rx_TADD_SIZE_Link2,  //Read address size (bytes in transfer = 32, "101")
     input   wire                         m_axis_rx_TADD_READY_Link2, //Read address Ready
     output  wire [7:0]                   m_axis_rx_TADD_LENGTH_Link2, //Read address Length (burst length = 1 = "00000001")
-    output  wire [TWIDTH-1:0]            m_axis_rx_TADD_ID_Link2, //Read Address ID
+    output  wire [ATWIDTH-1:0]           m_axis_rx_TADD_ID_Link2, //Read Address ID
     output  wire                         m_axis_rx_TADD_VALID_Link2, //Read Address valid
     input   wire [1:0]                   m_axis_rx_TRESP_Link2, //Read Data Response ("00" - Okay, "01" - read or write okay, "10" - subordinate error, decode error "11")
     input   wire                         m_axis_rx_TLAST_Link2, //Read Data Last
@@ -204,8 +205,8 @@ module hbm_custom_to_axis_if #(
     input   wire                         s_axis_tx_TADD_READY_Link3, //Write address Ready
     output  wire [7:0]                   s_axis_tx_TADD_LENGTH_Link3, //write address Length (burst length = 1 = "00000001")
     output  wire [1:0]                   s_axis_tx_TADD_BURST_Link3, //write addresss Burst (BURST TYPE = INC = "01")      
-    output  wire [TWIDTH-1:0]            s_axis_tx_TADD_ID_Link3, //Write address ID
-    input   wire [TWIDTH-1:0]            s_axis_tx_TRESP_ID_Link3, //Write Response ID
+    output  wire [ATWIDTH-1:0]           s_axis_tx_TADD_ID_Link3, //Write address ID
+    input   wire [ATWIDTH-1:0]           s_axis_tx_TRESP_ID_Link3, //Write Response ID
     input   wire [1:0]                   s_axis_tx_TRESP_Link3, //Write Data Response ("00" - Okay, "01" - read or write okay, "10" - subordinate error, decode error "11")
     input   wire                         s_axis_tx_RESP_VALID_Link3, //Write response valid
     output  wire                         s_axis_tx_RESP_RDY_Link3, //Write Response Ready   
@@ -216,12 +217,12 @@ module hbm_custom_to_axis_if #(
     output  wire                         m_axis_rx_TREADY_Link3, //Read Data Ready
     input   wire [DWIDTH-1:0]            m_axis_rx_TDATA_Link3, //Read Data
     output  wire [AXI_ADD_WIDTH-1:0]     m_axis_rx_TADD_Link3, //Read Data Address
-    input   wire [TWIDTH-1:0]            m_axis_rx_TID_Link3, //Read Data 
+    input   wire [ATWIDTH-1:0]           m_axis_rx_TID_Link3, //Read Data
     output  wire [1:0]                   m_axis_rx_TADD_BURST_Link3, //read addresss Burst (BURST TYPE = INC = "01")
     output  wire [2:0]                   m_axis_rx_TADD_SIZE_Link3,  //Read address size (bytes in transfer = 32, "101")
     input   wire                         m_axis_rx_TADD_READY_Link3, //Read address Ready
     output  wire [7:0]                   m_axis_rx_TADD_LENGTH_Link3, //Read address Length (burst length = 1 = "00000001")
-    output  wire [TWIDTH-1:0]            m_axis_rx_TADD_ID_Link3, //Read Address ID
+    output  wire [ATWIDTH-1:0]           m_axis_rx_TADD_ID_Link3, //Read Address ID
     output  wire                         m_axis_rx_TADD_VALID_Link3, //Read Address valid
     input   wire [1:0]                   m_axis_rx_TRESP_Link3, //Read Data Response ("00" - Okay, "01" - read or write okay, "10" - subordinate error, decode error "11")
     input   wire                         m_axis_rx_TLAST_Link3 //Read Data Last
@@ -307,7 +308,8 @@ axi_rd_wr_state_machine #(
     .AWIDTH(AWIDTH),
     .TWIDTH(TWIDTH),
     // AXI Interface 
-    .AXI_ADD_WIDTH(AXI_ADD_WIDTH)
+    .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
+    .ATWIDTH(ATWIDTH)
 
   )  
 axi_rd_wr_tate_machine_link0_inst (
@@ -378,7 +380,8 @@ axi_rd_wr_state_machine #(
     .AWIDTH(AWIDTH),
     .TWIDTH(TWIDTH),
     // AXI Interface 
-    .AXI_ADD_WIDTH(AXI_ADD_WIDTH)
+    .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
+    .ATWIDTH(ATWIDTH)
 
   )  
 axi_rd_wr_tate_machine_link1_inst (
@@ -449,7 +452,8 @@ axi_rd_wr_tate_machine_link1_inst (
     .AWIDTH(AWIDTH),
     .TWIDTH(TWIDTH),
     // AXI Interface 
-    .AXI_ADD_WIDTH(AXI_ADD_WIDTH)
+    .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
+    .ATWIDTH(ATWIDTH)
 
   )  
 axi_rd_wr_tate_machine_link2_inst (
@@ -520,7 +524,8 @@ axi_rd_wr_tate_machine_link2_inst (
     .AWIDTH(AWIDTH),
     .TWIDTH(TWIDTH),
     // AXI Interface 
-    .AXI_ADD_WIDTH(AXI_ADD_WIDTH)
+    .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
+    .ATWIDTH(ATWIDTH)
 
   )  
 axi_rd_wr_tate_machine_link3_inst (

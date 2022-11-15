@@ -21,6 +21,7 @@ module axi_rd_wr_state_machine #(
     parameter TWIDTH                = 6,
     // AXI Interface 
     parameter AXI_ADD_WIDTH         = 32,
+    parameter ATWIDTH               = 9
 
 
   )  (
@@ -40,8 +41,8 @@ module axi_rd_wr_state_machine #(
     input   wire                         s_axis_tx_TADD_READY, //Write address Ready
     output  wire [7:0]                   s_axis_tx_TADD_LENGTH, //write address Length (burst length = 1 = "00000001")
     output  wire [1:0]                   s_axis_tx_TADD_BURST, //write addresss Burst (BURST TYPE = INC = "01")      
-    output  wire [TWIDTH-1:0]            s_axis_tx_TADD_ID, //Write address ID
-    input   wire [TWIDTH-1:0]            s_axis_tx_TRESP_ID, //Write Response ID
+    output  wire [ATWIDTH-1:0]           s_axis_tx_TADD_ID, //Write address ID
+    input   wire [ATWIDTH-1:0]           s_axis_tx_TRESP_ID, //Write Response ID
     input   wire [1:0]                   s_axis_tx_TRESP, //Write Data Response ("00" - Okay, "01" - read or write okay, "10" - subordinate error, decode error "11")
     input   wire                         s_axis_tx_RESP_VALID, //Write response valid
     output  wire                         s_axis_tx_RESP_RDY, //Write Response Ready   
@@ -52,12 +53,12 @@ module axi_rd_wr_state_machine #(
     output  wire                         m_axis_rx_TREADY, //Read Data Ready
     input   wire [DWIDTH-1:0]            m_axis_rx_TDATA, //Read Data
     output  wire [AXI_ADD_WIDTH-1:0]     m_axis_rx_TADD, //Read Data Address
-    input   wire [TWIDTH-1:0]            m_axis_rx_TID, //Read Data 
+    input   wire [ATWIDTH-1:0]           m_axis_rx_TID, //Read Data
     output  wire [1:0]                   m_axis_rx_TADD_BURST, //read addresss Burst (BURST TYPE = INC = "01")
     output  wire [2:0]                   m_axis_rx_TADD_SIZE,  //Read address size (bytes in transfer = 32, "101")
     input   wire                         m_axis_rx_TADD_READY, //Read address Ready
     output  wire [7:0]                   m_axis_rx_TADD_LENGTH, //Read address Length (burst length = 1 = "00000001")
-    output  wire [TWIDTH-1:0]            m_axis_rx_TADD_ID, //Read Address ID
+    output  wire [ATWIDTH-1:0]           m_axis_rx_TADD_ID, //Read Address ID
     output  wire                         m_axis_rx_TADD_VALID, //Read Address valid
     input   wire [1:0]                   m_axis_rx_TRESP, //Read Data Response ("00" - Okay, "01" - read or write okay, "10" - subordinate error, decode error "11")
     input   wire                         m_axis_rx_TLAST, //Read Data Last
@@ -125,7 +126,7 @@ module axi_rd_wr_state_machine #(
     s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH'd0, 5'b00000};  //Assert Write Address
     s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
     s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-    s_axis_tx_TADD_ID[TWIDTH-1:0] <= TWIDTH'd0;
+    s_axis_tx_TADD_ID[ATWIDTH-1:0] <= ATWIDTH'd0;
     //Write Data
     s_axis_tx_TDATA[DWIDTH-1:0] <= DWIDTH'd0;
     s_axis_tx_TVALID <= 1'b0;
@@ -165,7 +166,7 @@ module axi_rd_wr_state_machine #(
             s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {WR_ADDRESS, 5'b00000};  //Assert Write Address
             s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
             s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-            s_axis_tx_TADD_ID[TWIDTH-1:0] <= WR_TAG_IN;
+            s_axis_tx_TADD_ID[ATWIDTH-1:0] <= WR_TAG_IN[ATWIDTH-1:0];
             //Write Data
             s_axis_tx_TDATA[DWIDTH-1:0] <= DATA_IN;
             s_axis_tx_TVALID <= 1'b1;
@@ -179,7 +180,7 @@ module axi_rd_wr_state_machine #(
             s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH'd0, 5'b00000};  //Assert Write Address
             s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
             s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-            s_axis_tx_TADD_ID[TWIDTH-1:0] <= TWIDTH'd0;
+            s_axis_tx_TADD_ID[ATWIDTH-1:0] <= ATWIDTH'd0;
             //Write Data
             s_axis_tx_TDATA[DWIDTH-1:0] <= DWIDTH'd0;
             s_axis_tx_TVALID <= 1'b0;
@@ -219,9 +220,9 @@ module axi_rd_wr_state_machine #(
     m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH'd0, 5'b00000};  //Read Address to zero
     m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
     m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-    s_axis_tx_TADD_ID[TWIDTH-1:0] <= TWIDTH'd0;
+    s_axis_tx_TADD_ID[ATWIDTH-1:0] <= ATWIDTH'd0;
     DATA_OUT[DWIDTH-1:0] <= DWIDTH'd0;
-    TAG_OUT[TWIDTH-1:0] <= WIDTH'd0;
+    TAG_OUT[TWIDTH-1:0] <= TWIDTH'd0;
     DATA_VALID <= 1'b0;
     rd_req_count <= 64'd0;
     
@@ -258,7 +259,7 @@ module axi_rd_wr_state_machine #(
             m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {RD_ADDRESS, 5'b00000};  //Read Address to zero
             m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
             m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-            m_axis_rx_TADD_ID[TWIDTH-1:0] <= RD_TAG_IN;
+            m_axis_rx_TADD_ID[ATWIDTH-1:0] <= RD_TAG_IN[ATWIDTH-1:0];
             rd_req_rdy <= 1'b1;
             rd_req_count <= rd_req_count + 1'b1;
         end else begin
@@ -268,17 +269,17 @@ module axi_rd_wr_state_machine #(
             m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH'd0, 5'b00000};  //Read Address to zero
             m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
             m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-            s_axis_tx_TADD_ID[TWIDTH-1:0] <= TWIDTH'd0;
+            s_axis_tx_TADD_ID[ATWIDTH-1:0] <= ATWIDTH'd0;
             rd_req_rdy <= 1'b0;      
 
         end
         if (m_axis_rx_TVALID_R == 1'b1) begin
             DATA_OUT[DWIDTH-1:0] <= m_axis_rx_TDATA[DWIDTH-1:0];
-            TAG_OUT[TWIDTH-1:0] <= m_axis_rx_TID[TWIDTH-1:0];
+            TAG_OUT[TWIDTH-1:0] <= {(TWIDTH-ATWIDTH)'d0,m_axis_rx_TID[ATWIDTH-1:0]};
             DATA_VALID <= m_axis_rx_TVALID_R;
         end else begin
             DATA_OUT[DWIDTH-1:0] <= DWIDTH'd0;
-            TAG_OUT[TWIDTH-1:0] <= WIDTH'd0;
+            TAG_OUT[TWIDTH-1:0] <= TWIDTH'd0;
             DATA_VALID <= 1'b0;
         
         end

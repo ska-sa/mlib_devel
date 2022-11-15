@@ -149,6 +149,9 @@ class hbm(YellowBlock): # class hmc inherits from yellowblock.py
             inst.add_port('s_axi_3_rid', 'm_axis_rx_TID_Link3', dir='in', width=6)
             inst.add_port('s_axi_3_rlast', 'm_axis_rx_TLAST_Link3', dir='in', width=6)
 
+            #INIT_DONE from Memory Bank 0
+            inst.add_port('apb_complete_0_0_0', 'INIT_DONE', dir='in', width=1)
+
         # If HBM Memory Bank 1 selected then connect yellow block to AXI 7 to AXI 4 ports
         elif self.mem_bank == 1:
 
@@ -278,6 +281,9 @@ class hbm(YellowBlock): # class hmc inherits from yellowblock.py
             inst.add_port('s_axi_7_arid', 'm_axis_rx_TADD_ID_Link3', dir='out', width=6)
             inst.add_port('s_axi_7_rid', 'm_axis_rx_TID_Link3', dir='in', width=6)
             inst.add_port('s_axi_7_rlast', 'm_axis_rx_TLAST_Link3', dir='in', width=6)
+
+            # INIT_DONE from Memory Bank 1
+            inst.add_port('apb_complete_1_0_0', 'INIT_DONE', dir='in', width=1)
 
         else:
             self.logger.error('Invalid HBM Memory Bank selected for HBM. Cannot connect to HBM memory bank')
