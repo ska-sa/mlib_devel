@@ -123,14 +123,14 @@ module axi_rd_wr_state_machine #(
     //Write Address
     s_axis_tx_TADD_VALID <= 1'b0; // Assert the write Address Data Valid
     s_axis_tx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
-    s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH'd0, 5'b00000};  //Assert Write Address
+    s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {{AWIDTH'{1'b0}}, 5'b00000};  //Assert Write Address
     s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
     s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-    s_axis_tx_TADD_ID[ATWIDTH-1:0] <= ATWIDTH'd0;
+    s_axis_tx_TADD_ID[ATWIDTH-1:0] <= {ATWIDTH'{1'b0}};
     //Write Data
-    s_axis_tx_TDATA[DWIDTH-1:0] <= DWIDTH'd0;
+    s_axis_tx_TDATA[DWIDTH-1:0] <= {DWIDTH'{1'b0}};
     s_axis_tx_TVALID <= 1'b0;
-    s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= NUM_DATA_BYTES'b00000000000000000000000000000000'; //Write Data Strobe
+    s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= {NUM_DATA_BYTES{1'b0}}'; //Write Data Strobe
     s_axis_tx_TLAST <= 1'b0; //burst is one, so each transfer is the last
      
   end else begin
@@ -163,9 +163,9 @@ module axi_rd_wr_state_machine #(
             //Write Address
             s_axis_tx_TADD_VALID <= 1'b1; // Assert the write Address Data Valid
             s_axis_tx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
-            s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {WR_ADDRESS, 5'b00000};  //Assert Write Address
-            s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
-            s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
+            s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {WR_ADDRESS, 5'b000000};  //Assert Write Address
+            s_axis_tx_TADD_LENGTH[7:0] <= 8'b1; //burst length 1
+            s_axis_tx_TADD_BURST[1:0] <= 2'b1; //Bust Type INC
             s_axis_tx_TADD_ID[ATWIDTH-1:0] <= WR_TAG_IN[ATWIDTH-1:0];
             //Write Data
             s_axis_tx_TDATA[DWIDTH-1:0] <= DATA_IN;
@@ -177,14 +177,14 @@ module axi_rd_wr_state_machine #(
             //Write Address
             s_axis_tx_TADD_VALID <= 1'b0; // Assert the write Address Data Valid
             s_axis_tx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
-            s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH'd0, 5'b00000};  //Assert Write Address
+            s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH{1'b0}, 5'b00000};  //Assert Write Address
             s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
             s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-            s_axis_tx_TADD_ID[ATWIDTH-1:0] <= ATWIDTH'd0;
+            s_axis_tx_TADD_ID[ATWIDTH-1:0] <= {ATWIDTH{1'b0}};
             //Write Data
-            s_axis_tx_TDATA[DWIDTH-1:0] <= DWIDTH'd0;
+            s_axis_tx_TDATA[DWIDTH-1:0] <= {DWIDTH{1'b0}};
             s_axis_tx_TVALID <= 1'b0;
-            s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= NUM_DATA_BYTES'b00000000000000000000000000000000'; //Write Data Strobe
+            s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= {NUM_DATA_BYTES{1'b0}}; //Write Data Strobe
             s_axis_tx_TLAST <= 1'b0; //burst is one, so each transfer is the last
             wr_req_rdy <= 1'b0;      
           end
@@ -217,12 +217,12 @@ module axi_rd_wr_state_machine #(
     rd_req_rdy <= 1'b0;
     m_axis_rx_TADD_VALID <= 1'b0; // Assert the read Address Data Valid
     m_axis_rx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
-    m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH'd0, 5'b00000};  //Read Address to zero
+    m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH{1'b0}, 5'b00000};  //Read Address to zero
     m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
     m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-    s_axis_tx_TADD_ID[ATWIDTH-1:0] <= ATWIDTH'd0;
-    DATA_OUT[DWIDTH-1:0] <= DWIDTH'd0;
-    TAG_OUT[TWIDTH-1:0] <= TWIDTH'd0;
+    s_axis_tx_TADD_ID[ATWIDTH-1:0] <= {ATWIDTH{1'b0}};
+    DATA_OUT[DWIDTH-1:0] <= {DWIDTH{1'b0}};
+    TAG_OUT[TWIDTH-1:0] <= {TWIDTH{1'b0}};
     DATA_VALID <= 1'b0;
     rd_req_count <= 64'd0;
     
@@ -266,20 +266,20 @@ module axi_rd_wr_state_machine #(
             //Write Address
             m_axis_rx_TADD_VALID <= 1'b0; // Assert the read Address Data Valid
             m_axis_rx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
-            m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH'd0, 5'b00000};  //Read Address to zero
+            m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH{1'b0}, 5'b00000};  //Read Address to zero
             m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
             m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-            s_axis_tx_TADD_ID[ATWIDTH-1:0] <= ATWIDTH'd0;
+            s_axis_tx_TADD_ID[ATWIDTH-1:0] <= {ATWIDTH{1'b0}};
             rd_req_rdy <= 1'b0;      
 
         end
         if (m_axis_rx_TVALID_R == 1'b1) begin
             DATA_OUT[DWIDTH-1:0] <= m_axis_rx_TDATA[DWIDTH-1:0];
-            TAG_OUT[TWIDTH-1:0] <= {(TWIDTH-ATWIDTH)'d0,m_axis_rx_TID[ATWIDTH-1:0]};
+            TAG_OUT[TWIDTH-1:0] <= {(TWIDTH-ATWIDTH){1'b0},m_axis_rx_TID[ATWIDTH-1:0]};
             DATA_VALID <= m_axis_rx_TVALID_R;
         end else begin
-            DATA_OUT[DWIDTH-1:0] <= DWIDTH'd0;
-            TAG_OUT[TWIDTH-1:0] <= TWIDTH'd0;
+            DATA_OUT[DWIDTH-1:0] <= {DWIDTH{1'b0}};
+            TAG_OUT[TWIDTH-1:0] <= {TWIDTH{1'b0}};
             DATA_VALID <= 1'b0;
         
         end
