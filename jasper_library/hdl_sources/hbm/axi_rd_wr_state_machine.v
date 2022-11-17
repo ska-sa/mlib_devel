@@ -83,7 +83,6 @@ module axi_rd_wr_state_machine #(
     output wire [1:0] TX_AXI_ERROR_RESP,
     output wire [1:0] RX_AXI_ERROR_RESP
     
-    
   );
   
 //Debug Signals
@@ -103,12 +102,81 @@ module axi_rd_wr_state_machine #(
   reg [63:0] rd_req_count;
   reg wr_req_rdy;
   reg rd_req_rdy;
-  
+  reg [DWIDTH-1:0] reg_DATA_OUT;
+  reg [TWIDTH-1:0] reg_TAG_OUT;
+  reg reg_DATA_VALID;
+  reg [63:0] r_data_valid_rx_hbm_valid_count;
+
+  //AXI Tx registers
+  reg reg_s_axis_tx_TADD_VALID;
+  reg [2:0] reg_s_axis_tx_TADD_SIZE;
+  reg [AXI_ADD_WIDTH-1:0] reg_s_axis_tx_TADD;
+  reg [7:0] reg_s_axis_tx_TADD_LENGTH;
+  reg [1:0] reg_s_axis_tx_TADD_BURST;
+  reg [ATWIDTH-1:0] reg_s_axis_tx_TADD_ID;
+  reg [DWIDTH-1:0] reg_s_axis_tx_TDATA;
+  reg reg_s_axis_tx_TVALID;
+  reg [NUM_DATA_BYTES-1:0] reg_s_axis_tx_TSTROBE;
+  reg reg_s_axis_tx_TLAST;
+
+  //AXI Rx Registers
+  reg reg_m_axis_rx_TADD_VALID;
+  reg [2:0] reg_m_axis_rx_TADD_SIZE;
+  reg [AXI_ADD_WIDTH-1:0] reg_m_axis_rx_TADD;
+  reg [7:0] reg_m_axis_rx_TADD_LENGTH;
+  reg [1:0] reg_m_axis_rx_TADD_BURST;
+  reg [ATWIDTH-1:0] reg_m_axis_rx_TADD_ID;
+  reg reg_m_axis_rx_TREADY;
+
+  wire [ATWIDTH-1:0] tag_zero_add_id;
+  wire [TWIDTH-1:0] tag_zero;
+  wire [DWIDTH-1:0] data_zero;
+  wire [AWIDTH-1:0] add_zero;
+  wire [NUM_DATA_BYTES-1:0] strobe_zero;
+  wire [NUM_DATA_BYTES-1:0] strobe_one;
+  wire [ATWIDTH-TWIDTH-1:0] tag_diff_zero;
+
+  //assign intialise registers
+  assign tag_zero_add_id = {ATWIDTH{1'b0}}; //generic tag address ID zeroed
+  assign tag_zero = {TWIDTH{1'b0}}; //generic tag zeroed
+  assign data_zero = {DWIDTH{1'b0}}; //generic data zeroed
+  assign add_zero = {AWIDTH{1'b0}}; //Address zeroed
+  assign strobe_zero = {NUM_DATA_BYTES{1'b0}}; //Strobe zeroed
+  assign strobe_one = {NUM_DATA_BYTES{1'b1}}; //Strobe ones
+  assign tag_diff_zero = {(ATWIDTH-TWIDTH){1'b0}}; //tag diff zero
+
+  //assign AXI Tx
+  assign s_axis_tx_TADD_VALID = reg_s_axis_tx_TADD_VALID;
+  assign s_axis_tx_TADD_SIZE = reg_s_axis_tx_TADD_SIZE;
+  assign s_axis_tx_TADD = reg_s_axis_tx_TADD;
+  assign s_axis_tx_TADD_LENGTH = reg_s_axis_tx_TADD_LENGTH;
+  assign s_axis_tx_TADD_BURST = reg_s_axis_tx_TADD_BURST;
+  assign s_axis_tx_TADD_ID = reg_s_axis_tx_TADD_ID;
+  assign s_axis_tx_TDATA = reg_s_axis_tx_TDATA;
+  assign s_axis_tx_TVALID = reg_s_axis_tx_TVALID;
+  assign s_axis_tx_TSTROBE = reg_s_axis_tx_TSTROBE;
+  assign s_axis_tx_TLAST = reg_s_axis_tx_TLAST;
+
+  //assign AXI Rx
+  assign m_axis_rx_TADD_VALID = reg_m_axis_rx_TADD_VALID;
+  assign m_axis_rx_TADD_SIZE = reg_m_axis_rx_TADD_SIZE;
+  assign m_axis_rx_TADD = reg_m_axis_rx_TADD;
+  assign m_axis_rx_TADD_LENGTH = reg_m_axis_rx_TADD_LENGTH;
+  assign m_axis_rx_TADD_BURST = reg_m_axis_rx_TADD_BURST;
+  assign m_axis_rx_TADD_ID = reg_m_axis_rx_TADD_ID;
+  assign m_axis_rx_TREADY = reg_m_axis_rx_TREADY;
+
+  assign DATA_OUT = reg_DATA_OUT;
+  assign TAG_OUT = reg_TAG_OUT;
+  assign DATA_VALID = reg_DATA_VALID;
+
+
   // State machine state vector elements
   localparam STATE_IDLE         = 4'd0; // Default state: enter on power up or reset, exit on INIT_DONE == 1'b1
   localparam WAIT_AXI_TX_RDY    = 4'd1; // Wait for AXI TX bus to become available
   localparam STATE_WR_DATA      = 4'd2; // Issue write add data and transactions
   localparam STATE_WR_RESP_DATA = 4'd3; // Wait for write response data and check for errors
+  localparam STATE_CHK_RD_DATA  = 4'd4; // Check for read data
   
   // ***************************************************************************************************************************************************************************************
   // Write State Machine: Write Data Transmit
@@ -121,17 +189,17 @@ module axi_rd_wr_state_machine #(
     wr_req_rdy <= 1'b0;
     wr_req_count <= 64'd0;
     //Write Address
-    s_axis_tx_TADD_VALID <= 1'b0; // Assert the write Address Data Valid
-    s_axis_tx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
-    s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {{AWIDTH'{1'b0}}, 5'b00000};  //Assert Write Address
-    s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
-    s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-    s_axis_tx_TADD_ID[ATWIDTH-1:0] <= {ATWIDTH'{1'b0}};
+    reg_s_axis_tx_TADD_VALID <= 1'b0; // Assert the write Address Data Valid
+    reg_s_axis_tx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
+    reg_s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {add_zero, 5'b00000};  //Assert Write Address
+    reg_s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
+    reg_s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
+    reg_s_axis_tx_TADD_ID[ATWIDTH-1:0] <= tag_zero_add_id;
     //Write Data
-    s_axis_tx_TDATA[DWIDTH-1:0] <= {DWIDTH'{1'b0}};
-    s_axis_tx_TVALID <= 1'b0;
-    s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= {NUM_DATA_BYTES{1'b0}}'; //Write Data Strobe
-    s_axis_tx_TLAST <= 1'b0; //burst is one, so each transfer is the last
+    reg_s_axis_tx_TDATA[DWIDTH-1:0] <= data_zero;
+    reg_s_axis_tx_TVALID <= 1'b0;
+    reg_s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= strobe_zero; //Write Data Strobe
+    reg_s_axis_tx_TLAST <= 1'b0; //burst is one, so each transfer is the last
      
   end else begin
 
@@ -161,31 +229,31 @@ module axi_rd_wr_state_machine #(
           //if write is enabled            
           if (WR_REQ == 1'b1) begin // Write to AXI-S Tx      
             //Write Address
-            s_axis_tx_TADD_VALID <= 1'b1; // Assert the write Address Data Valid
-            s_axis_tx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
-            s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {WR_ADDRESS, 5'b000000};  //Assert Write Address
-            s_axis_tx_TADD_LENGTH[7:0] <= 8'b1; //burst length 1
-            s_axis_tx_TADD_BURST[1:0] <= 2'b1; //Bust Type INC
-            s_axis_tx_TADD_ID[ATWIDTH-1:0] <= WR_TAG_IN[ATWIDTH-1:0];
+            reg_s_axis_tx_TADD_VALID <= 1'b1; // Assert the write Address Data Valid
+            reg_s_axis_tx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
+            reg_s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {WR_ADDRESS, 5'b000000};  //Assert Write Address
+            reg_s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
+            reg_s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
+            reg_s_axis_tx_TADD_ID[ATWIDTH-1:0] <= WR_TAG_IN[ATWIDTH-1:0];
             //Write Data
-            s_axis_tx_TDATA[DWIDTH-1:0] <= DATA_IN;
-            s_axis_tx_TVALID <= 1'b1;
-            s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= NUM_DATA_BYTES'b11111111111111111111111111111111'; //Write Data Strobe
-            s_axis_tx_TLAST <= 1'b1; //burst is one, so each transfer is the last
+            reg_s_axis_tx_TDATA[DWIDTH-1:0] <= DATA_IN;
+            reg_s_axis_tx_TVALID <= 1'b1;
+            reg_s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= strobe_one; //Write Data Strobe
+            reg_s_axis_tx_TLAST <= 1'b1; //burst is one, so each transfer is the last
             wr_req_count <= wr_req_count + 1'b1;
           end else begin
             //Write Address
-            s_axis_tx_TADD_VALID <= 1'b0; // Assert the write Address Data Valid
-            s_axis_tx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
-            s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH{1'b0}, 5'b00000};  //Assert Write Address
-            s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
-            s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-            s_axis_tx_TADD_ID[ATWIDTH-1:0] <= {ATWIDTH{1'b0}};
+            reg_s_axis_tx_TADD_VALID <= 1'b0; // Assert the write Address Data Valid
+            reg_s_axis_tx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
+            reg_s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {add_zero, 5'b00000};  //Assert Write Address
+            reg_s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
+            reg_s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
+            reg_s_axis_tx_TADD_ID[ATWIDTH-1:0] <= tag_zero_add_id;
             //Write Data
-            s_axis_tx_TDATA[DWIDTH-1:0] <= {DWIDTH{1'b0}};
-            s_axis_tx_TVALID <= 1'b0;
-            s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= {NUM_DATA_BYTES{1'b0}}; //Write Data Strobe
-            s_axis_tx_TLAST <= 1'b0; //burst is one, so each transfer is the last
+            reg_s_axis_tx_TDATA[DWIDTH-1:0] <= data_zero;
+            reg_s_axis_tx_TVALID <= 1'b0;
+            reg_s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= strobe_zero; //Write Data Strobe
+            reg_s_axis_tx_TLAST <= 1'b0; //burst is one, so each transfer is the last
             wr_req_rdy <= 1'b0;      
           end
           //if AXI bus is not ready, then deassert write ready signals  
@@ -213,17 +281,17 @@ module axi_rd_wr_state_machine #(
   if (RST) begin
     // Deassert all control signals on reset
     rd_axi_state <= STATE_IDLE;     // Enter state machine in IDLE state
-    m_axis_rx_TREADY <= 1'b0;      // Signal to from this module to 
+    reg_m_axis_rx_TREADY <= 1'b0;      // Signal to from this module to
     rd_req_rdy <= 1'b0;
-    m_axis_rx_TADD_VALID <= 1'b0; // Assert the read Address Data Valid
-    m_axis_rx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
-    m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH{1'b0}, 5'b00000};  //Read Address to zero
-    m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
-    m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-    s_axis_tx_TADD_ID[ATWIDTH-1:0] <= {ATWIDTH{1'b0}};
-    DATA_OUT[DWIDTH-1:0] <= {DWIDTH{1'b0}};
-    TAG_OUT[TWIDTH-1:0] <= {TWIDTH{1'b0}};
-    DATA_VALID <= 1'b0;
+    reg_m_axis_rx_TADD_VALID <= 1'b0; // Assert the read Address Data Valid
+    reg_m_axis_rx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
+    reg_m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {add_zero, 5'b00000};  //Read Address to zero
+    reg_m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
+    reg_m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
+    reg_m_axis_rx_TADD_ID[ATWIDTH-1:0] <= tag_zero_add_id;
+    reg_DATA_OUT[DWIDTH-1:0] <= data_zero;
+    reg_TAG_OUT[TWIDTH-1:0] <= tag_zero;
+    reg_DATA_VALID <= 1'b0;
     rd_req_count <= 64'd0;
     
     r_data_valid_rx_hbm_valid_count <= 64'b0;
@@ -231,7 +299,7 @@ module axi_rd_wr_state_machine #(
   end else begin
    
             
-    m_axis_rx_TREADY <= 1'b1; // After reset this module is always ready
+    reg_m_axis_rx_TREADY <= 1'b1; // After reset this module is always ready
     //rd_req_rdy <= 1'b1; //After reset this module in always ready
       
     if ((m_axis_rx_TVALID == 1'b1) && (INIT_DONE == 1'b1))
@@ -254,34 +322,34 @@ module axi_rd_wr_state_machine #(
         rd_axi_state <= STATE_CHK_RD_DATA;
         //if read is enabled
         if (RD_REQ == 1'b1) begin  // Read request        
-            m_axis_rx_TADD_VALID <= 1'b1; // Assert the Read Address Data Valid
-            m_axis_rx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
-            m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {RD_ADDRESS, 5'b00000};  //Read Address to zero
-            m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
-            m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-            m_axis_rx_TADD_ID[ATWIDTH-1:0] <= RD_TAG_IN[ATWIDTH-1:0];
+            reg_m_axis_rx_TADD_VALID <= 1'b1; // Assert the Read Address Data Valid
+            reg_m_axis_rx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
+            reg_m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {RD_ADDRESS, 5'b00000};  //Read Address to zero
+            reg_m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
+            reg_m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
+            reg_m_axis_rx_TADD_ID[ATWIDTH-1:0] <= RD_TAG_IN[ATWIDTH-1:0];
             rd_req_rdy <= 1'b1;
             rd_req_count <= rd_req_count + 1'b1;
         end else begin
             //Write Address
-            m_axis_rx_TADD_VALID <= 1'b0; // Assert the read Address Data Valid
-            m_axis_rx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
-            m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {AWIDTH{1'b0}, 5'b00000};  //Read Address to zero
-            m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
-            m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
-            s_axis_tx_TADD_ID[ATWIDTH-1:0] <= {ATWIDTH{1'b0}};
+            reg_m_axis_rx_TADD_VALID <= 1'b0; // Assert the read Address Data Valid
+            reg_m_axis_rx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
+            reg_m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {add_zero, 5'b00000};  //Read Address to zero
+            reg_m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
+            reg_m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
+            reg_m_axis_rx_TADD_ID[ATWIDTH-1:0] <= tag_zero_add_id;
             rd_req_rdy <= 1'b0;      
 
         end
-        if (m_axis_rx_TVALID_R == 1'b1) begin
-            DATA_OUT[DWIDTH-1:0] <= m_axis_rx_TDATA[DWIDTH-1:0];
-            TAG_OUT[TWIDTH-1:0] <= {(TWIDTH-ATWIDTH){1'b0},m_axis_rx_TID[ATWIDTH-1:0]};
-            DATA_VALID <= m_axis_rx_TVALID_R;
+        if (m_axis_rx_TVALID == 1'b1) begin
+            reg_DATA_OUT[DWIDTH-1:0] <= m_axis_rx_TDATA[DWIDTH-1:0];
+            reg_TAG_OUT[TWIDTH-1:0] <= {tag_diff_zero,m_axis_rx_TID[ATWIDTH-1:0]};
+            reg_DATA_VALID <= m_axis_rx_TVALID;
         end else begin
-            DATA_OUT[DWIDTH-1:0] <= {DWIDTH{1'b0}};
-            TAG_OUT[TWIDTH-1:0] <= {TWIDTH{1'b0}};
-            DATA_VALID <= 1'b0;
-        
+            reg_DATA_OUT[DWIDTH-1:0] <= data_zero;
+            reg_TAG_OUT[TWIDTH-1:0] <= tag_zero;
+            reg_DATA_VALID <= 1'b0;
+
         end
     end
     endcase  
@@ -299,7 +367,11 @@ assign RD_READY = rd_req_rdy;
   // Signals used in this state machine
   reg [2:0] axi_wr_err_resp_pulse_gen_state;
   reg axi_wr_err_resp_pulse;
-  
+  reg [1:0] reg_TX_AXI_ERROR_RESP;
+  reg reg_s_axis_tx_RESP_RDY;
+
+  assign TX_AXI_ERROR_RESP = reg_TX_AXI_ERROR_RESP;
+  assign s_axis_tx_RESP_RDY = reg_s_axis_tx_RESP_RDY;
  // ***************************************************************************************************************************************************************************************
   // AXI Error Response Write Pulse Generate State Machine: Generate a pulse every time a AXI error response occurs on write, so that the DSP functionality that stops the HBM write process 
   // when a AXI response write error occurs can restart as the single is pulsed and not active high, which causes the mechanism to hang, as the AXI write error response is only cleared when the
@@ -310,29 +382,29 @@ assign RD_READY = rd_req_rdy;
   if (RST) begin
     axi_wr_err_resp_pulse_gen_state <= STATE_CHECK_ERROR;
     axi_wr_err_resp_pulse <= 1'b0;
-    s_axis_tx_RESP_RDY <= 1'b0;
-    TX_AXI_ERROR_RESP <= 2'b00;
+    reg_s_axis_tx_RESP_RDY <= 1'b0;
+    reg_TX_AXI_ERROR_RESP <= 2'b00;
    
   end else begin
-      s_axis_tx_RESP_RDY <= 1'b1;  //Assert Response is Ready
+      reg_s_axis_tx_RESP_RDY <= 1'b1;  //Assert Response is Ready
       case (axi_wr_err_resp_pulse_gen_state)
         // State: Entry to state machine (from reset)
         STATE_CHECK_ERROR: begin
           axi_wr_err_resp_pulse <= 1'b0;
           //Wait until an AXI error response is detected on either read and write and then exit to state that asserts error
           if (s_axis_tx_RESP_VALID == 1'b1 && ( s_axis_tx_TRESP == 2'b10 || s_axis_tx_TRESP == 2'b11)) begin
-            TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
+            reg_TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
             axi_wr_err_resp_pulse_gen_state <= STATE_ASSERT_ERROR; 
           //Stay in this state if no error
           end else begin
             axi_wr_err_resp_pulse_gen_state <= STATE_CHECK_ERROR;
-            TX_AXI_ERROR_RESP <= 2'b00;
+            reg_TX_AXI_ERROR_RESP <= 2'b00;
           end
         end
         STATE_ASSERT_ERROR: begin
           //Assert the error on the FLIT error response pulse signal
           axi_wr_err_resp_pulse <= 1'b1;
-          TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
+          reg_TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
           axi_wr_err_resp_pulse_gen_state <= STATE_DEASSERT_ERROR;
         end
         STATE_DEASSERT_ERROR: begin
@@ -340,10 +412,10 @@ assign RD_READY = rd_req_rdy;
           //Wait in this state until an AXI error response is cleared and exit to STATE_CHECK_ERROR
           if (s_axis_tx_RESP_VALID == 1'b1 && s_axis_tx_TRESP == 2'b00 ) begin
             axi_wr_err_resp_pulse_gen_state <= STATE_CHECK_ERROR; 
-            TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
+            reg_TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
           //Stay in this state if AXI error response is not cleared
           end else begin
-            TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
+            reg_TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
             axi_wr_err_resp_pulse_gen_state <= STATE_DEASSERT_ERROR;
           end
         end                    
@@ -354,7 +426,9 @@ assign RD_READY = rd_req_rdy;
  // Signals used in this state machine
   reg [2:0] axi_rd_err_resp_pulse_gen_state;
   reg axi_rd_err_resp_pulse;
+  reg [1:0] reg_RX_AXI_ERROR_RESP;
 
+  assign RX_AXI_ERROR_RESP = reg_RX_AXI_ERROR_RESP;
   
 // ***************************************************************************************************************************************************************************************
   // AXI Error Response Read Pulse Generate State Machine: Generate a pulse every time a AXI error response occurs on read, so that the DSP functionality that stops the HBM read process 
@@ -366,7 +440,7 @@ assign RD_READY = rd_req_rdy;
   if (RST) begin
     axi_rd_err_resp_pulse_gen_state <= STATE_CHECK_ERROR;
     axi_rd_err_resp_pulse <= 1'b0;
-    RX_AXI_ERROR_RESP <= 2'b00;
+    reg_RX_AXI_ERROR_RESP <= 2'b00;
  
   end else begin
       case (axi_rd_err_resp_pulse_gen_state)
@@ -376,16 +450,15 @@ assign RD_READY = rd_req_rdy;
           //Wait until an AXI error response is detected on either read and write and then exit to state that asserts error
           if (m_axis_rx_TVALID == 1'b1 && ( m_axis_rx_TRESP == 2'b10 || m_axis_rx_TRESP == 2'b11)) begin
             axi_rd_err_resp_pulse_gen_state <= STATE_ASSERT_ERROR;
-            RX_AXI_ERROR_RESP <= m_axis_rx_TRESP;
+            reg_RX_AXI_ERROR_RESP <= m_axis_rx_TRESP;
           //Stay in this state if no error
           end else begin
-            m_axis_rx_TRESP <= 2'b00;
-            RX_AXI_ERROR_RESP <= m_axis_rx_TRESP;
+            reg_RX_AXI_ERROR_RESP <= m_axis_rx_TRESP;
             axi_rd_err_resp_pulse_gen_state <= STATE_CHECK_ERROR;
           end
         end
         STATE_ASSERT_ERROR: begin
-          //Assert the error on the FLIT error response pulse signal
+          //Assert the error on the AXI error response pulse signal
           axi_rd_err_resp_pulse <= 1'b1;
           axi_rd_err_resp_pulse_gen_state <= STATE_DEASSERT_ERROR;
         end
@@ -394,10 +467,10 @@ assign RD_READY = rd_req_rdy;
           //Wait in this state until an AXI error response is cleared and exit to STATE_CHECK_ERROR
           if (m_axis_rx_TVALID == 1'b1 && m_axis_rx_TRESP == 2'b00 ) begin
             axi_rd_err_resp_pulse_gen_state <= STATE_CHECK_ERROR;
-            RX_AXI_ERROR_RESP <= m_axis_rx_TRESP;
+            reg_RX_AXI_ERROR_RESP <= m_axis_rx_TRESP;
           //Stay in this state if AXI error response is not cleared
           end else begin
-            RX_AXI_ERROR_RESP <= m_axis_rx_TRESP;
+            reg_RX_AXI_ERROR_RESP <= m_axis_rx_TRESP;
             axi_rd_err_resp_pulse_gen_state <= STATE_DEASSERT_ERROR;
           end
         end                    
