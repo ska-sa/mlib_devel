@@ -32,8 +32,8 @@ module hbm_custom_to_axis_if #(
     input  wire WR_REQ_LINK0,
     input  wire [AWIDTH-1:0] WR_ADDRESS_LINK0,
     input  wire [AWIDTH-1:0] RD_ADDRESS_LINK0,
-    input  wire [TWIDTH-1:0] WR_TAG_IN_LINK0,
-    input  wire [TWIDTH-1:0] RD_TAG_IN_LINK0,
+    //input  wire [TWIDTH-1:0] WR_TAG_IN_LINK0, //not used for now
+    input  wire [TWIDTH-1:0] TAG_IN_LINK0, //RD_TAG_IN_LINK0,
     output wire [TWIDTH-1:0] TAG_OUT_LINK0,
     output wire DATA_VALID_LINK0,
     output wire RD_READY_LINK0,
@@ -46,8 +46,8 @@ module hbm_custom_to_axis_if #(
     input  wire WR_REQ_LINK1,
     input  wire [AWIDTH-1:0] WR_ADDRESS_LINK1,
     input  wire [AWIDTH-1:0] RD_ADDRESS_LINK1,
-    input  wire [TWIDTH-1:0] WR_TAG_IN_LINK1,
-    input  wire [TWIDTH-1:0] RD_TAG_IN_LINK1,
+    //input  wire [TWIDTH-1:0] WR_TAG_IN_LINK1,
+    input  wire [TWIDTH-1:0] TAG_IN_LINK1, // RD_TAG_IN_LINK1,
     output wire [TWIDTH-1:0] TAG_OUT_LINK1,
     output wire DATA_VALID_LINK1,
     output wire RD_READY_LINK1,
@@ -60,8 +60,8 @@ module hbm_custom_to_axis_if #(
     input  wire WR_REQ_LINK2,
     input  wire [AWIDTH-1:0] WR_ADDRESS_LINK2,
     input  wire [AWIDTH-1:0] RD_ADDRESS_LINK2,
-    input  wire [TWIDTH-1:0] WR_TAG_IN_LINK2,
-    input  wire [TWIDTH-1:0] RD_TAG_IN_LINK2,
+    //input  wire [TWIDTH-1:0] WR_TAG_IN_LINK2,
+    input  wire [TWIDTH-1:0] TAG_IN_LINK2, //RD_TAG_IN_LINK2,
     output wire [TWIDTH-1:0] TAG_OUT_LINK2,
     output wire DATA_VALID_LINK2,
     output wire RD_READY_LINK2,
@@ -74,8 +74,8 @@ module hbm_custom_to_axis_if #(
     input  wire WR_REQ_LINK3,
     input  wire [AWIDTH-1:0] WR_ADDRESS_LINK3,
     input  wire [AWIDTH-1:0] RD_ADDRESS_LINK3,
-    input  wire [TWIDTH-1:0] WR_TAG_IN_LINK3,
-    input  wire [TWIDTH-1:0] RD_TAG_IN_LINK3,
+    //input  wire [TWIDTH-1:0] WR_TAG_IN_LINK3,
+    input  wire [TWIDTH-1:0] TAG_IN_LINK3, //RD_TAG_IN_LINK3,
     output wire [TWIDTH-1:0] TAG_OUT_LINK3,
     output wire DATA_VALID_LINK3,
     output wire RD_READY_LINK3,
@@ -249,6 +249,31 @@ assign dbg_sRX_AXI_ERROR_RESP_LINK2 = sRX_AXI_ERROR_RESP_LINK2;
 assign dbg_sTX_AXI_ERROR_RESP_LINK3 = sTX_AXI_ERROR_RESP_LINK3;
 assign dbg_sRX_AXI_ERROR_RESP_LINK3 = sRX_AXI_ERROR_RESP_LINK3;
 
+//write tag initialised to zero for now
+wire [TWIDTH-1:0] WR_TAG_IN_LINK0;
+assign WR_TAG_IN_LINK0 = {TWIDTH{1'b0}}; //generic tag zeroed
+
+wire [TWIDTH-1:0] WR_TAG_IN_LINK1;
+assign WR_TAG_IN_LINK1 = {TWIDTH{1'b0}}; //generic tag zeroed
+
+wire [TWIDTH-1:0] WR_TAG_IN_LINK2;
+assign WR_TAG_IN_LINK2 = {TWIDTH{1'b0}}; //generic tag zeroed
+
+wire [TWIDTH-1:0] WR_TAG_IN_LINK3;
+assign WR_TAG_IN_LINK3 = {TWIDTH{1'b0}}; //generic tag zeroed
+
+//Read Tag assignment
+wire [TWIDTH-1:0] RD_TAG_IN_LINK0;
+assign RD_TAG_IN_LINK0 = TAG_IN_LINK0;
+
+wire [TWIDTH-1:0] RD_TAG_IN_LINK1;
+assign RD_TAG_IN_LINK1 = TAG_IN_LINK1;
+
+wire [TWIDTH-1:0] RD_TAG_IN_LINK2;
+assign RD_TAG_IN_LINK2 = TAG_IN_LINK2;
+
+wire [TWIDTH-1:0] RD_TAG_IN_LINK3;
+assign RD_TAG_IN_LINK3 = TAG_IN_LINK3;
 
 //Link0
 
