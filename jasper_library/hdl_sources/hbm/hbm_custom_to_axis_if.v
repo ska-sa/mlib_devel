@@ -19,9 +19,9 @@ module hbm_custom_to_axis_if #(
     parameter NUM_DATA_BYTES        = 32,   //Leave untouched
     parameter AWIDTH                = 27,
     parameter TWIDTH                = 9,  //Tag Width
-    parameter ATWIDTH               = 6,  //AXI Tag Width
     // AXI Interface 
-    parameter AXI_ADD_WIDTH         = 32
+    parameter AXI_ADD_WIDTH         = 32,
+    parameter ATWIDTH               = 6  //AXI Tag Width
 )(
 
     //Simulink Ports 
@@ -225,10 +225,7 @@ module hbm_custom_to_axis_if #(
     output  wire [ATWIDTH-1:0]           m_axis_rx_TADD_ID_Link3, //Read Address ID
     output  wire                         m_axis_rx_TADD_VALID_Link3, //Read Address valid
     input   wire [1:0]                   m_axis_rx_TRESP_Link3, //Read Data Response ("00" - Okay, "01" - read or write okay, "10" - subordinate error, decode error "11")
-    input   wire                         m_axis_rx_TLAST_Link3 //Read Data Last
-    
-
-    
+    input   wire                         m_axis_rx_TLAST_Link3 //Read Data Last    
 );
 
 //wire declarations
@@ -310,9 +307,8 @@ axi_rd_wr_state_machine #(
     // AXI Interface 
     .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
     .ATWIDTH(ATWIDTH)
-
   )  
-axi_rd_wr_tate_machine_link0_inst (
+  axi_rd_wr_state_machine_link0_inst (
     .CLK(USER_CLK),
     .RST(user_rstRR),
     .INIT_DONE(init_done_latchRR),
@@ -337,8 +333,8 @@ axi_rd_wr_tate_machine_link0_inst (
     .s_axis_tx_TLAST(s_axis_tx_TLAST_Link0), //Write Data Last
     .s_axis_tx_TSTROBE(s_axis_tx_TSTROBE_Link0), //Write Data Byte Strobe
     //From HMC Ctrl RX to AXI
-    .m_axis_rx_TVALID(m_axis_rx_TVALID_Link0), //Read Data Valid
-    ,m_axis_rx_TREADY(m_axis_rx_TREADY_Link0), //Read Data Ready
+    .m_axis_rx_TVALID(m_axis_rx_TVALID_Link0), //Read ATWIDTH
+    .m_axis_rx_TREADY(m_axis_rx_TREADY_Link0), //Read Data Ready
     .m_axis_rx_TDATA(m_axis_rx_TDATA_Link0), //Read Data
     .m_axis_rx_TADD(m_axis_rx_TADD_Link0), //Read Data Address
     .m_axis_rx_TID(m_axis_rx_TID_Link0), //Read Data 
@@ -382,9 +378,8 @@ axi_rd_wr_state_machine #(
     // AXI Interface 
     .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
     .ATWIDTH(ATWIDTH)
-
   )  
-axi_rd_wr_tate_machine_link1_inst (
+  axi_rd_wr_state_machine_link1_inst (
     .CLK(USER_CLK),
     .RST(user_rstRR),
     .INIT_DONE(init_done_latchRR),
@@ -410,7 +405,7 @@ axi_rd_wr_tate_machine_link1_inst (
     .s_axis_tx_TSTROBE(s_axis_tx_TSTROBE_Link1), //Write Data Byte Strobe
     //From HMC Ctrl RX to AXI
     .m_axis_rx_TVALID(m_axis_rx_TVALID_Link1), //Read Data Valid
-    ,m_axis_rx_TREADY(m_axis_rx_TREADY_Link1), //Read Data Ready
+    .m_axis_rx_TREADY(m_axis_rx_TREADY_Link1), //Read Data Ready
     .m_axis_rx_TDATA(m_axis_rx_TDATA_Link1), //Read Data
     .m_axis_rx_TADD(m_axis_rx_TADD_Link1), //Read Data Address
     .m_axis_rx_TID(m_axis_rx_TID_Link1), //Read Data 
@@ -454,9 +449,8 @@ axi_rd_wr_tate_machine_link1_inst (
     // AXI Interface 
     .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
     .ATWIDTH(ATWIDTH)
-
   )  
-axi_rd_wr_tate_machine_link2_inst (
+  axi_rd_wr_state_machine_link2_inst (
     .CLK(USER_CLK),
     .RST(user_rstRR),
     .INIT_DONE(init_done_latchRR),
@@ -482,7 +476,7 @@ axi_rd_wr_tate_machine_link2_inst (
     .s_axis_tx_TSTROBE(s_axis_tx_TSTROBE_Link2), //Write Data Byte Strobe
     //From HMC Ctrl RX to AXI
     .m_axis_rx_TVALID(m_axis_rx_TVALID_Link2), //Read Data Valid
-    ,m_axis_rx_TREADY(m_axis_rx_TREADY_Link2), //Read Data Ready
+    .m_axis_rx_TREADY(m_axis_rx_TREADY_Link2), //Read Data Ready
     .m_axis_rx_TDATA(m_axis_rx_TDATA_Link2), //Read Data
     .m_axis_rx_TADD(m_axis_rx_TADD_Link2), //Read Data Address
     .m_axis_rx_TID(m_axis_rx_TID_Link2), //Read Data 
@@ -526,9 +520,8 @@ axi_rd_wr_tate_machine_link2_inst (
     // AXI Interface 
     .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
     .ATWIDTH(ATWIDTH)
-
   )  
-axi_rd_wr_tate_machine_link3_inst (
+  axi_rd_wr_state_machine_link3_inst (
     .CLK(USER_CLK),
     .RST(user_rstRR),
     .INIT_DONE(init_done_latchRR),
@@ -554,7 +547,7 @@ axi_rd_wr_tate_machine_link3_inst (
     .s_axis_tx_TSTROBE(s_axis_tx_TSTROBE_Link3), //Write Data Byte Strobe
     //From HMC Ctrl RX to AXI
     .m_axis_rx_TVALID(m_axis_rx_TVALID_Link3), //Read Data Valid
-    ,m_axis_rx_TREADY(m_axis_rx_TREADY_Link3), //Read Data Ready
+    .m_axis_rx_TREADY(m_axis_rx_TREADY_Link3), //Read Data Ready
     .m_axis_rx_TDATA(m_axis_rx_TDATA_Link3), //Read Data
     .m_axis_rx_TADD(m_axis_rx_TADD_Link3), //Read Data Address
     .m_axis_rx_TID(m_axis_rx_TID_Link3), //Read Data 

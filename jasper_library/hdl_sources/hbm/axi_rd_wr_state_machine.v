@@ -18,10 +18,10 @@ module axi_rd_wr_state_machine #(
     parameter NUM_DATA_BYTES        = 32,   //Leave untouched
     // HBM Interface Address Width
     parameter AWIDTH                = 27,
-    parameter TWIDTH                = 6,
-    // AXI Interface 
+    parameter TWIDTH                = 9,
+    // AXI Interface
     parameter AXI_ADD_WIDTH         = 32,
-    parameter ATWIDTH               = 9
+    parameter ATWIDTH               = 6
 
 
   )  (
@@ -89,11 +89,8 @@ module axi_rd_wr_state_machine #(
   (* mark_debug = "true" *) wire [63:0] dbg_wr_req_count; //Virtual test probe for the logic analyser
   (* mark_debug = "true" *) wire [63:0] dbg_rd_req_count; //Virtual test probe for the logic analyser
   (* mark_debug = "true" *) wire [63:0] dbg_r_data_valid_rx_hbm_valid_count;
-  wire [63:0] r_data_valid_rx_hbm_valid_count;
-    
-  assign dbg_wr_req_count = wr_req_count;
-  assign dbg_rd_req_count = rd_req_count;
-  assign dbg_r_data_valid_rx_hbm_valid_count = r_data_valid_rx_hbm_valid_count;
+  reg [63:0] r_data_valid_rx_hbm_valid_count;
+
 
 // Signals used in this module
   reg [3:0] wr_axi_state,rd_axi_state;
@@ -105,7 +102,6 @@ module axi_rd_wr_state_machine #(
   reg [DWIDTH-1:0] reg_DATA_OUT;
   reg [TWIDTH-1:0] reg_TAG_OUT;
   reg reg_DATA_VALID;
-  reg [63:0] r_data_valid_rx_hbm_valid_count;
 
   //AXI Tx registers
   reg reg_s_axis_tx_TADD_VALID;
@@ -134,7 +130,7 @@ module axi_rd_wr_state_machine #(
   wire [AWIDTH-1:0] add_zero;
   wire [NUM_DATA_BYTES-1:0] strobe_zero;
   wire [NUM_DATA_BYTES-1:0] strobe_one;
-  wire [ATWIDTH-TWIDTH-1:0] tag_diff_zero;
+  wire [TWIDTH-ATWIDTH-1:0] tag_diff_zero;
 
   //assign intialise registers
   assign tag_zero_add_id = {ATWIDTH{1'b0}}; //generic tag address ID zeroed
@@ -143,7 +139,7 @@ module axi_rd_wr_state_machine #(
   assign add_zero = {AWIDTH{1'b0}}; //Address zeroed
   assign strobe_zero = {NUM_DATA_BYTES{1'b0}}; //Strobe zeroed
   assign strobe_one = {NUM_DATA_BYTES{1'b1}}; //Strobe ones
-  assign tag_diff_zero = {(ATWIDTH-TWIDTH){1'b0}}; //tag diff zero
+  assign tag_diff_zero = {(TWIDTH-ATWIDTH){1'b0}}; //tag diff zero
 
   //assign AXI Tx
   assign s_axis_tx_TADD_VALID = reg_s_axis_tx_TADD_VALID;
@@ -169,6 +165,12 @@ module axi_rd_wr_state_machine #(
   assign DATA_OUT = reg_DATA_OUT;
   assign TAG_OUT = reg_TAG_OUT;
   assign DATA_VALID = reg_DATA_VALID;
+
+  //debug
+
+  assign dbg_wr_req_count = wr_req_count;
+  assign dbg_rd_req_count = rd_req_count;
+  assign dbg_r_data_valid_rx_hbm_valid_count = r_data_valid_rx_hbm_valid_count;
 
 
   // State machine state vector elements
@@ -293,7 +295,6 @@ module axi_rd_wr_state_machine #(
     reg_TAG_OUT[TWIDTH-1:0] <= tag_zero;
     reg_DATA_VALID <= 1'b0;
     rd_req_count <= 64'd0;
-    
     r_data_valid_rx_hbm_valid_count <= 64'b0;
     
   end else begin
