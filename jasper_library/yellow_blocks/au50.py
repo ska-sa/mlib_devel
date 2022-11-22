@@ -370,6 +370,10 @@ class au50(YellowBlock):
         tcl_cmds['pre_synth'] += ['set repos [get_property ip_repo_paths [current_project]]']
         tcl_cmds['pre_synth'] += ['set_property ip_repo_paths "$repos %s/alveo_onehundred_gbe/" [current_project]'%os.getenv('HDL_ROOT')]
         tcl_cmds['pre_synth'] += ['update_ip_catalog']
+        # Remove critical warning for HBM simulation gateway ins
+        tcl_cmds['pre_synth'] += ['set_msg_config -id {Synth 8-4442} -new_severity {WARNING}']
+
+
 
         tcl_cmds['pre_synth'] += ['import_files -force -norecurse %s/alveo_onehundred_gbe/src/common_stfc_lib/'%os.getenv('HDL_ROOT')]
         #tcl_cmds['pre_synth'] += ['set_property library common_stfc_lib [get_files  %s/alveo_onehundred_gbe/src/common_stfc_lib/]'%os.getenv('HDL_ROOT')]
