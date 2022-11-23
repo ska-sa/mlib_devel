@@ -32,7 +32,7 @@ class au50(YellowBlock):
         inst.add_port('cmc_clk_clk_n',        'cmc_clk_clk_n', dir='in', parent_port=True)
         inst.add_port('cmc_clk_clk_p',        'cmc_clk_clk_p', dir='in', parent_port=True)
         inst.add_port('hbm_clk_clk_n',        'hbm_clk_clk_n', dir='in',  parent_port=True)
-        inst.add_port('hbm_clk_clk_p',        'hmb_clk_clk_p', dir='in',  parent_port=True)
+        inst.add_port('hbm_clk_clk_p',        'hbm_clk_clk_p', dir='in',  parent_port=True)
         inst.add_port('s_axi_aclk',           'axil_clk',      dir='out')
         inst.add_port('s_axi_areset_n',       'axil_rst_n',    dir='out')
 
