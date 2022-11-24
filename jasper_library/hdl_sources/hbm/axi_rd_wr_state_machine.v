@@ -301,7 +301,7 @@ module axi_rd_wr_state_machine #(
    
             
     reg_m_axis_rx_TREADY <= 1'b1; // After reset this module is always ready
-    //rd_req_rdy <= 1'b1; //After reset this module in always ready
+    rd_req_rdy <= 1'b1; //After reset this module in always ready
       
     if ((m_axis_rx_TVALID == 1'b1) && (INIT_DONE == 1'b1))
     begin
@@ -317,8 +317,6 @@ module axi_rd_wr_state_machine #(
             rd_axi_state <= STATE_CHK_RD_DATA;
         end
     end
-    // State: Decode AXI bus and figure out what is data, overheads or NULL FLITs
-    //        If there is HMC memory data returned, check this data with the data written to HMC memory in the write state machine 
     STATE_CHK_RD_DATA: begin
         rd_axi_state <= STATE_CHK_RD_DATA;
         //if read is enabled
@@ -329,7 +327,7 @@ module axi_rd_wr_state_machine #(
             reg_m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
             reg_m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
             reg_m_axis_rx_TADD_ID[ATWIDTH-1:0] <= RD_TAG_IN[ATWIDTH-1:0];
-            rd_req_rdy <= 1'b1;
+            //rd_req_rdy <= 1'b1;
             rd_req_count <= rd_req_count + 1'b1;
         end else begin
             //Write Address
@@ -339,7 +337,7 @@ module axi_rd_wr_state_machine #(
             reg_m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000001; //burst length 1
             reg_m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
             reg_m_axis_rx_TADD_ID[ATWIDTH-1:0] <= tag_zero_add_id;
-            rd_req_rdy <= 1'b0;      
+            //rd_req_rdy <= 1'b0;
 
         end
         if (m_axis_rx_TVALID == 1'b1) begin
