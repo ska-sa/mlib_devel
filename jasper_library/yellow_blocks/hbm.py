@@ -358,6 +358,14 @@ class hbm(YellowBlock): # class hmc inherits from yellowblock.py
         self.instantiate_hbm(top)
         #top.assign_signal('mez%s_init_done' % self.mez, '%s_init_done' % self.fullname)
         #top.assign_signal('mez%s_post_ok' % self.mez, '%s_post_ok' % self.fullname)
+        #top.assign_signal('data_in_xilinx1','32\'d0')
+        #top.assign_signal('data_in_xilinx2','32\'d0')
+        #top.assign_signal('data_in_xilinx3','32\'d0')
+        #top.assign_signal('data_in_xilinx4','32\'d0')
+        #top.assign_signal('data_in_xilinx5','32\'d0')
+        #top.assign_signal('data_in_xilinx6','32\'d0')
+        #top.assign_signal('data_in_xilinx7','32\'d0')
+        #top.assign_signal('data_in_xilinx8','32\'d0')
 
     def gen_constraints(self):
         cons = []
