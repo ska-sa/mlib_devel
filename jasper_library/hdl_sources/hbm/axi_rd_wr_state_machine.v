@@ -92,7 +92,7 @@ module axi_rd_wr_state_machine #(
   
   (* mark_debug = "true" *) wire [3:0] dbg_wr_axi_state;
   (* mark_debug = "true" *) wire [3:0] dbg_rd_axi_state;
-  (* mark_debug = "true" *) wire [15:0] dbg_wait_for_time_before_bus_trans_cnt;
+  //(* mark_debug = "true" *) wire [15:0] dbg_wait_for_time_before_bus_trans_cnt;
   (* mark_debug = "true" *) wire dbg_WR_REQ;  
   (* mark_debug = "true" *) wire dbg_INIT_DONE;
   (* mark_debug = "true" *) wire dbg_wr_req_rdy;  
@@ -132,7 +132,7 @@ module axi_rd_wr_state_machine #(
 
 // Signals used in this module
   reg [3:0] wr_axi_state,rd_axi_state;
-  reg [15:0] wait_for_time_before_bus_trans_cnt;
+  //reg [15:0] wait_for_time_before_bus_trans_cnt;
   reg [63:0] wr_req_count;
   reg [63:0] rd_req_count;
   reg wr_req_rdy;
@@ -213,7 +213,7 @@ module axi_rd_wr_state_machine #(
     //assign the debug signals ILA
   assign dbg_wr_axi_state = wr_axi_state;
   assign dbg_rd_axi_state = rd_axi_state;
-  assign dbg_wait_for_time_before_bus_trans_cnt = wait_for_time_before_bus_trans_cnt;
+  //assign dbg_wait_for_time_before_bus_trans_cnt = wait_for_time_before_bus_trans_cnt;
   assign dbg_WR_REQ = WR_REQ;  
   assign dbg_INIT_DONE = INIT_DONE;
   assign dbg_wr_req_rdy = wr_req_rdy;  
@@ -258,7 +258,7 @@ module axi_rd_wr_state_machine #(
 
   if (RST) begin
     wr_axi_state <= STATE_IDLE;
-    wait_for_time_before_bus_trans_cnt <= 16'd0;
+    //wait_for_time_before_bus_trans_cnt <= 16'd0;
     wr_req_rdy <= 1'b0;
     wr_req_count <= 64'd0;
     //Write Address
@@ -282,19 +282,25 @@ module axi_rd_wr_state_machine #(
         // State: Entry to state machine (from reset)
         STATE_IDLE: begin
           wr_axi_state <= STATE_IDLE;
-          if (INIT_DONE == 1'b1) begin // We cannot issue any AXI Transactions if the HBM is not initialized!
-            wait_for_time_before_bus_trans_cnt <= wait_for_time_before_bus_trans_cnt + 1'b1; // Give some time after HBM have initialize before doing AXI transactions
+          if (INIT_DONE == 1'b1 && s_axis_tx_TREADY == 1'b1) begin // We cannot issue any AXI Transactions if the HBM is not initialized!
+            //wait_for_time_before_bus_trans_cnt <= wait_for_time_before_bus_trans_cnt + 1'b1; // Give some time after HBM have initialize before doing AXI transactions
+            wr_req_rdy <= 1'b1;
+            wr_axi_state <= WAIT_AXI_TX_RDY;
+          end else begin
+            wr_req_rdy <= 1'b0;
+            wr_axi_state <= STATE_IDLE;       
           end
-          if (wait_for_time_before_bus_trans_cnt[8] == 1'b1) begin
-            wr_axi_state <= WAIT_AXI_TX_RDY; // OK waited long enough => time for AXI transactions
-          end
-        wr_req_rdy <= 1'b0;
+          //if (wait_for_time_before_bus_trans_cnt[8] == 1'b1) begin
+          //  wr_axi_state <= WAIT_AXI_TX_RDY; // OK waited long enough => time for AXI transactions
+          //end        
         end
         WAIT_AXI_TX_RDY: begin
-          wr_req_rdy <= 1'b0;
-          wr_axi_state <= WAIT_AXI_TX_RDY; // Wait for TX AXI FIFO to become available
           if (s_axis_tx_TREADY == 1'b1) begin // Make sure AXI TX FIFO is not FULL  
             wr_axi_state <= STATE_WR_DATA;
+            wr_req_rdy <= 1'b1;
+          end else begin
+            wr_axi_state <= WAIT_AXI_TX_RDY; // Wait for TX AXI FIFO to become available
+            wr_req_rdy <= 1'b0;            
           end
         end
         // State:Write Address Data (ignoring the subordinate write address ready signals for now. I assume it can handle the throughput with buffers and the data write ready signal should

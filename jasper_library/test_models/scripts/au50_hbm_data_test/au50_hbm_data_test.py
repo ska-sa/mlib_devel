@@ -4,7 +4,7 @@ import casperfpga,time
 
 #parameters
 #snapshot read length (can be adjusted)
-read_length = 600; 
+read_length = 1400; 
 
 
 #Connecting to the Alveo U50
@@ -16,8 +16,19 @@ print('done')
 #program the Alveo U50
 print('programming the Alveo U50...')
 #First light HBM tutorial
-f.get_system_information('au50_hbm_data_test_2022-11-23_1954.fpg')
-f.transport.upload_to_ram_and_program('au50_hbm_data_test_2022-11-23_1954.fpg')
+#f.get_system_information('au50_hbm_data_test_2022-11-23_1954.fpg')
+#f.transport.upload_to_ram_and_program('au50_hbm_data_test_2022-11-23_1954.fpg')
+#f.get_system_information('au50_hbm_data_test_ila_wr_arlen_fix_add_data_fix_2022-12-01_0711.fpg')
+#f.transport.upload_to_ram_and_program('au50_hbm_data_test_ila_wr_arlen_fix_add_data_fix_2022-12-01_0711.fpg')
+f.get_system_information('au50_hbm_data_test_2022-12-06_1259.fpg')
+f.transport.upload_to_ram_and_program('au50_hbm_data_test_2022-12-06_1259.fpg')
+
+print('done')
+
+
+#disable the HBM write and read process
+print('Disabling the HBM write and read process...')
+f.registers.reg_cntrl.write(wr_rd_en= False)
 print('done')
 
 #Set the data rate control
@@ -25,9 +36,12 @@ print('done')
 #True = write and read every clock cycle (HBM can't handle the data rate: 240MHz x 256 bits = 61.44Gbps)
 f.registers.reg_cntrl.write(data_rate_sel= False)
 
+#time.sleep(2);
+
 #arm the snap shots
 print('arming snapshot blocks...')
-f.snapshots.hbm_in_snap_ss.arm()
+f.snapshots.hbm_in_wr_snap_ss.arm()
+f.snapshots.hbm_in_rd_snap_ss.arm()
 f.snapshots.hbm_out_snap_ss.arm()
 print('done')
 
@@ -45,11 +59,12 @@ f.registers.reg_cntrl.write(wr_rd_en= True)
 print('done')
 
 #wait a few seconds for snap shots to fill
-#time.sleep(3)
+#time.sleep(2)
 
 #grab the snapshots
 print('reading the snapshots...')
-hbm_in = f.snapshots.hbm_in_snap_ss.read(arm=False)['data']
+hbm_in_wr = f.snapshots.hbm_in_wr_snap_ss.read(arm=False)['data']
+hbm_in_rd = f.snapshots.hbm_in_rd_snap_ss.read(arm=False)['data']
 hbm_out = f.snapshots.hbm_out_snap_ss.read(arm=False)['data']
 print('done')
 
@@ -65,48 +80,44 @@ print("hbm rd cnt:",f.registers.hbm_rd_cnt_link0.read_uint())
 print("hbm wr cnt:",f.registers.hbm_wr_cnt_link0.read_uint())
 print("hbm data valid out cnt:",f.registers.hbm_out_cnt_link0.read_uint())
 print("hbm empty read cnt:",f.registers.hbm_empty_rd_cnt_link0.read_uint())
-print("hbm empty write count cnt:",f.registers.hbm_empty_wr_cnt_link0.read_uint())
+print("hbm empty write cnt:",f.registers.hbm_empty_wr_cnt_link0.read_uint())
 print("hbm wr err:",f.registers.hbm_wr_err_link0.read_uint())
 print("hbm rd err:",f.registers.hbm_rd_err_link0.read_uint())
 print("hbm status:",f.registers.hbm_status.read_uint())
 
 print('done')
-#read back the snapshot captured data
-print('Displaying the snapshot block data...')
-print('HBM SNAPSHOT CAPTURED INPUT')
-print('-----------------------------')
-print('Num wr_en wr_addr wr_data wr_rdy rd_en rd_addr rd_tag rd_rdy') 
+#read back the snapshot captured write input data
+print('Displaying the snapshot block data #1...')
+print('HBM SNAPSHOT WRITE CAPTURED INPUT')
+print('---------------------------------')
+print('Num wr_en wr_addr wr_data wr_rdy') 
 for i in range(0, read_length):
-  print('[%i] %i %i %i %i %i %i %i %i'% \
-                                      (i, hbm_in['wr_en'][i], hbm_in['wr_addr'][i], \
-                                       hbm_in['data'][i], hbm_in['wr_rdy'][i], \
-                                       hbm_in['rd_en'][i], hbm_in['rd_addr'][i], \
-                                        hbm_in['tag'][i], hbm_in['rd_rdy'][i] ))
+  print('[%i] %i %i %i %i'% \
+                                      (i, hbm_in_wr['wr_en'][i], hbm_in_wr['wr_addr'][i], \
+                                       hbm_in_wr['wr_data'][i], hbm_in_wr['wr_rdy'][i]))
 #print 'write enable:'
-#print hbm_in['wr_en'][0:read_length]
-#print 'write address:'
-#print hbm_in['wr_addr'][0:read_length]
-#print 'write data:'
-#print hbm_in['data'][0:read_length]
-#print 'write ready:'
-#print hbm_in['wr_rdy'][0:read_length]
-#print 'read enable:'
-#print hbm_in['rd_en'][0:read_length]
-#print 'read address:'
-#print hbm_in['rd_addr'][0:read_length]
-#print 'read tag:'
-#print hbm_in['tag'][0:read_length]
-#print 'read ready:'
-#print hbm_in['rd_rdy'][0:read_length]
-print('HBM SNAPSHOT CAPTURED OUTPUT')
+#irint hbm_in_wr['wr_en'][0:read_length]
+print('done')
+#read back the snapshot captured read input data
+print('Displaying the snapshot block data #2...')
+print('HBM SNAPSHOT READ CAPTURED INPUT')
+print('---------------------------------')
+print('Num rd_en rd_addr rd_tag rd_data rd_rdy')
+for i in range(0, read_length):
+  print('[%i] %i %i %i %i'% \
+                                      (i, hbm_in_rd['rd_en'][i], hbm_in_rd['rd_addr'][i], \
+                                        hbm_in_rd['rd_tag'][i], hbm_in_rd['rd_rdy'][i]))
+
+print('done')                                      
+#read back the snapshot captured read output data                                      
+print('Displaying the snapshot block data #3...')
+print('HBM SNAPSHOT READ CAPTURED OUTPUT')
 print('-----------------------------')
-print('Num hbm_read_tag_out hbm_data_out')
-for i in range(1, read_length):
-  print('[%i] %i %i'%(i, hbm_out['tag'][i], hbm_out['data'][i] ))
+print('Num hbm_read_tag_out rd_hbm_data_out')
+for i in range(0, read_length):
+  print('[%i] %i %i'%(i, hbm_out['rd_tag'][i], hbm_out['rd_data'][i] ))
 #print 'hbm data out:'
-#print hbm_out['data'][0:read_length]
-#print 'hbm read tag out:'
-#print hbm_out['tag'][0:read_length]
-
-
+#print hbm_out['rd_data'][0:read_length]
+print('done')
+print('tutorial complete')
 
