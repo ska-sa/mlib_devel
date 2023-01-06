@@ -22,6 +22,16 @@ class hbm(YellowBlock): # class hmc inherits from yellowblock.py
 
         # If HBM Memory Bank 0 selected then connect yellow block to AXI 3 to AXI 0 ports
         if self.mem_bank == 0:
+            #Generics
+            hbm.add_parameter('DWIDTH', "256")
+            hbm.add_parameter('NUM_DATA_BYTES', "32")
+            hbm.add_parameter('AWIDTH', "27")
+            hbm.add_parameter('TWIDTH', "9")
+            hbm.add_parameter('HBM_ADD_BANK_SEL', "0")
+            hbm.add_parameter('AXI_ADD_WIDTH', "33")
+            hbm.add_parameter('AXI_BURST_SIZE', "1")
+            hbm.add_parameter('ATWIDTH', "6")
+
             # AXI Interface Ports 0
             hbm.add_port('m_axis_rx_TADD_Link0', 's_axi_0_araddr',  dir='out', width=32)
             hbm.add_port('m_axis_rx_TADD_READY_Link0', 's_axi_0_arready', dir='in', width=1)
@@ -154,6 +164,16 @@ class hbm(YellowBlock): # class hmc inherits from yellowblock.py
 
         # If HBM Memory Bank 1 selected then connect yellow block to AXI 7 to AXI 4 ports
         elif self.mem_bank == 1:
+
+            #Generics
+            hbm.add_parameter('DWIDTH', "256")
+            hbm.add_parameter('NUM_DATA_BYTES', "32")
+            hbm.add_parameter('AWIDTH', "27")
+            hbm.add_parameter('TWIDTH', "9")
+            hbm.add_parameter('HBM_ADD_BANK_SEL', "1")
+            hbm.add_parameter('AXI_ADD_WIDTH', "33")
+            hbm.add_parameter('AXI_BURST_SIZE', "1")
+            hbm.add_parameter('ATWIDTH', "6")
 
             # AXI Interface Ports 4
             hbm.add_port('m_axis_rx_TADD_Link0', 's_axi_4_araddr',  dir='out', width=32)
@@ -356,6 +376,26 @@ class hbm(YellowBlock): # class hmc inherits from yellowblock.py
     def modify_top(self,top):
 
         self.instantiate_hbm(top)
+        #If memory bank 0 then use these parameters
+        #if self.mem_bank == 0:
+        #   top.add_parameter('DWIDTH', "8'd256")
+        #  top.add_parameter('NUM_DATA_BYTES', "8'd32")
+        #    top.add_parameter('AWIDTH', "8'd27")
+        #    top.add_parameter('TWIDTH', "8'd9")
+        #    top.add_parameter('HBM_ADD_BANK_SEL', "1'd0")
+        #    top.add_parameter('AXI_ADD_WIDTH', "8'd33")
+        #    top.add_parameter('AXI_BURST_SIZE', "8'd1")
+        #    top.add_parameter('ATWIDTH', "8'd6")
+        #else:
+        #    top.add_parameter('DWIDTH', "8'd256")
+        #    top.add_parameter('NUM_DATA_BYTES', "8'd32")
+        #    top.add_parameter('AWIDTH', "8'd27")
+        #    top.add_parameter('TWIDTH', "8'd9")
+        #    top.add_parameter('HBM_ADD_BANK_SEL', "1'd1")
+        #    top.add_parameter('AXI_ADD_WIDTH', "8'd33")
+        #    top.add_parameter('AXI_BURST_SIZE', "8'd1")
+        #    top.add_parameter('ATWIDTH', "8'd6")
+
         #top.assign_signal('mez%s_init_done' % self.mez, '%s_init_done' % self.fullname)
         #top.assign_signal('mez%s_post_ok' % self.mez, '%s_post_ok' % self.fullname)
         #top.assign_signal('data_in_xilinx1','32\'d0')

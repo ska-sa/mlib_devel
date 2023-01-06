@@ -9,7 +9,7 @@
 * will always consume 10W as it is active all the time. 
 *
 *NB: If you use the 4th Memory AXI link once all other AXI links are utilised then the bandwidth may drop. This needs to be 
-*tested properly 
+*tested and investigated properly 
 *************************************************************************************************************************/
 
 module hbm_custom_to_axis_if #(
@@ -19,8 +19,10 @@ module hbm_custom_to_axis_if #(
     parameter NUM_DATA_BYTES        = 32,   //Leave untouched
     parameter AWIDTH                = 27,
     parameter TWIDTH                = 9,  //Tag Width
+    parameter HBM_ADD_BANK_SEL      = 0,  //0 = Memory Bank 0 (lower 4GB), 1 = Memory Bank 1 (Upper 4GB) 
     // AXI Interface 
-    parameter AXI_ADD_WIDTH         = 32,
+    parameter AXI_ADD_WIDTH         = 33,
+    parameter AXI_BURST_SIZE        = 1,
     parameter ATWIDTH               = 6  //AXI Tag Width
 )(
 
@@ -329,8 +331,10 @@ axi_rd_wr_state_machine #(
     // HBM Interface Address Width
     .AWIDTH(AWIDTH),
     .TWIDTH(TWIDTH),
+    .HBM_ADD_BANK_SEL(HBM_ADD_BANK_SEL),
     // AXI Interface 
     .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
+    .AXI_BURST_SIZE(AXI_BURST_SIZE),
     .ATWIDTH(ATWIDTH)
   )  
   axi_rd_wr_state_machine_link0_inst (
@@ -400,8 +404,10 @@ axi_rd_wr_state_machine #(
     // HBM Interface Address Width
     .AWIDTH(AWIDTH),
     .TWIDTH(TWIDTH),
+    .HBM_ADD_BANK_SEL(HBM_ADD_BANK_SEL),
     // AXI Interface 
     .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
+    .AXI_BURST_SIZE(AXI_BURST_SIZE),
     .ATWIDTH(ATWIDTH)
   )  
   axi_rd_wr_state_machine_link1_inst (
@@ -471,8 +477,10 @@ axi_rd_wr_state_machine #(
     // HBM Interface Address Width
     .AWIDTH(AWIDTH),
     .TWIDTH(TWIDTH),
+    .HBM_ADD_BANK_SEL(HBM_ADD_BANK_SEL),
     // AXI Interface 
     .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
+    .AXI_BURST_SIZE(AXI_BURST_SIZE),
     .ATWIDTH(ATWIDTH)
   )  
   axi_rd_wr_state_machine_link2_inst (
@@ -542,8 +550,10 @@ axi_rd_wr_state_machine #(
     // HBM Interface Address Width
     .AWIDTH(AWIDTH),
     .TWIDTH(TWIDTH),
+    .HBM_ADD_BANK_SEL(HBM_ADD_BANK_SEL),
     // AXI Interface 
     .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
+    .AXI_BURST_SIZE(AXI_BURST_SIZE),
     .ATWIDTH(ATWIDTH)
   )  
   axi_rd_wr_state_machine_link3_inst (

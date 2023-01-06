@@ -6,6 +6,7 @@ set_property PACKAGE_PIN N37                     [get_ports gt_ref_clk_0_clk_n]
 
 create_clock -period 10.000 [get_ports pcie_refclk_clk_p]
 create_clock -period 10.000 [get_ports cmc_clk_clk_p]
+create_clock -period 10.000 [get_ports hbm_clk_clk_p]
 
 #create_clock -period 4.000 -name VIRTUAL_axi4lite_aclk_0_1 -waveform {0.000 2.000}
 
@@ -124,8 +125,9 @@ set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins au50_bd_
 #HBM Timing constraints - 100MHz HBM clock and AXI clock
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins au50_bd_inst/clk_wiz_0/inst/mmcme4_adv_inst/CLKOUT0]] -group [get_clocks -of_objects [get_pins au50_bd_inst/hbm/clk_wiz_1/inst/mmcme4_adv_inst/CLKOUT0]]
 
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks hbm_clk_clk_p] -group [get_clocks -include_generated_clocks cmc_clk_clk_p]
 
-
+connect_debug_port dbg_hub/clk [get_nets au50_bd_inst/hbm/hbm_0/APB_0_PCLK]
 #set_input_delay -clock [get_clocks {VIRTUAL_axi4lite_aclk_0_1}] -min -add_delay 0 [get_ports {pcie_perstn}]
 #set_input_delay -clock [get_clocks {VIRTUAL_axi4lite_aclk_0_1}] -max -add_delay 4 [get_ports {pcie_perstn}]
 #set_input_delay -clock [get_clocks {pcie_refclk_clk_p}] -min -add_delay 0 [get_ports {pcie_perstn}]
