@@ -22,7 +22,9 @@ module axi_rd_wr_state_machine #(
     // AXI Interface 
     parameter AXI_ADD_WIDTH         = 33,
     parameter AXI_BURST_SIZE        = 1,
-    parameter ATWIDTH               = 6  //AXI Tag Width
+    parameter ATWIDTH               = 6,  //AXI Tag Width
+    parameter TEST_MODE             = True //If True, this enables the internal test mode with internally generated addressing and data ramps. If False,
+                                           //then the HBM custom interface is enabled and the address and data is externally provided.  
 
 
   )  (
@@ -111,6 +113,7 @@ module axi_rd_wr_state_machine #(
   (* mark_debug = "true" *) wire [NUM_DATA_BYTES-1:0] dbg_reg_s_axis_tx_TSTROBE;
   (* mark_debug = "true" *) wire dbg_reg_s_axis_tx_TLAST;
   (* mark_debug = "true" *) wire dbg_s_axis_tx_TREADY;
+  (* mark_debug = "true" *) wire dbg_s_axis_tx_TADD_READY;
   (* mark_debug = "true" *) wire dbg_AXI_ERROR_RESP_PULSE;
   // Signals used in this write debug state machine
   (* mark_debug = "true" *) wire  [2:0] dbg_axi_wr_err_resp_pulse_gen_state;
@@ -122,12 +125,28 @@ module axi_rd_wr_state_machine #(
   (* mark_debug = "true" *) wire dbg_axi_rd_err_resp_pulse;
   (* mark_debug = "true" *) wire [1:0] dbg_reg_RX_AXI_ERROR_RESP;
   (* mark_debug = "true" *) wire dbg_HBM_Memory_Bank_Sel;
-  //(* mark_debug = "true" *) wire dbg_hbm_fifo_almost_full;
-  //(* mark_debug = "true" *) wire dbg_hbm_fifo_almost_empty;
-  //(* mark_debug = "true" *) wire [31:0] dbg_hbm_fifo_words_wr_cnt;
-  //(* mark_debug = "true" *) wire [31:0] dbg_hbm_fifo_words_rd_cnt;
-  
-    
+  (* mark_debug = "true" *) wire dbg_reg_hbm_wr_fifo_cntrl_full;
+  (* mark_debug = "true" *) wire dbg_reg_hbm_wr_fifo_data_full;
+  (* mark_debug = "true" *) wire dbg_reg_hbm_wr_fifo_cntrl_empty;
+  (* mark_debug = "true" *) wire dbg_reg_hbm_wr_fifo_data_empty;
+  (* mark_debug = "true" *) wire dbg_wr_hbm_data_ack;
+  (* mark_debug = "true" *) wire dbg_wr_hbm_cntrl_ack;
+  (* mark_debug = "true" *) wire dbg_rd_hbm_data_valid;
+  (* mark_debug = "true" *) wire dbg_rd_hbm_cntrl_valid;
+  (* mark_debug = "true" *) wire [31:0] dbg_temp_rd_hbm_cntrl_add; 
+  (* mark_debug = "true" *) wire [255:0] dbg_temp_rd_hbm_data; 
+  (* mark_debug = "true" *) wire dbg_rd_hbm_cntrl_en;
+  (* mark_debug = "true" *) wire dbg_rd_hbm_data_en;
+  (* mark_debug = "true" *) wire [255:0] dbg_reg_wr_hbm_data;
+  (* mark_debug = "true" *) wire [31:0] dbg_reg_wr_hbm_cntrl_add; 
+  (* mark_debug = "true" *) wire [255:0] dbg_rd_hbm_data;
+  (* mark_debug = "true" *) wire [31:0] dbg_rd_hbm_cntrl_add;
+  (* mark_debug = "true" *) wire dbg_rd_req;
+  (* mark_debug = "true" *) wire dbg_m_axis_rx_TVALID; 
+  (* mark_debug = "true" *) wire [31:0] dbg_reg_rd_hbm_cntrl_add;
+  (* mark_debug = "true" *) wire dbg_m_axis_rx_TLAST;
+  (* mark_debug = "true" *) wire [AXI_ADD_WIDTH-1:0] dbg_reg_m_axis_rx_TADD;
+  (* mark_debug = "true" *) wire dbg_reg_m_axis_rx_TADD_VALID;
   
   reg [63:0] r_data_valid_rx_hbm_valid_count;
 
@@ -238,6 +257,7 @@ module axi_rd_wr_state_machine #(
   assign dbg_reg_s_axis_tx_TSTROBE = reg_s_axis_tx_TSTROBE; //m_axis_hbm_tstrb;//reg_s_axis_tx_TSTROBE;
   assign dbg_reg_s_axis_tx_TLAST = reg_s_axis_tx_TLAST; //m_axis_hbm_tlast;//reg_s_axis_tx_TLAST;
   assign dbg_s_axis_tx_TREADY = s_axis_tx_TREADY;
+  assign dbg_s_axis_tx_TADD_READY = s_axis_tx_TADD_READY;
   assign dbg_AXI_ERROR_RESP_PULSE =  axi_wr_err_resp_pulse || axi_rd_err_resp_pulse;
   // Signals used in this write debug state machine
   assign dbg_axi_wr_err_resp_pulse_gen_state = axi_wr_err_resp_pulse_gen_state;
@@ -250,63 +270,119 @@ module axi_rd_wr_state_machine #(
   assign dbg_reg_RX_AXI_ERROR_RESP = reg_RX_AXI_ERROR_RESP;
   assign dbg_HBM_Memory_Bank_Sel = HBM_Memory_Bank_Sel;
   
-  //assign dbg_hbm_fifo_almost_full = almost_hbm_fifo_full;
-  //assign dbg_hbm_fifo_almost_empty = almost_hbm_fifo_empty;
-  //assign dbg_hbm_fifo_words_wr_cnt = axis_hbm_wr_data_count;
-  //assign dbg_hbm_fifo_words_rd_cnt = axis_hbm_rd_data_count;
+  assign dbg_reg_hbm_wr_fifo_cntrl_full = wr_hbm_cntrl_full;
+  assign dbg_reg_hbm_wr_fifo_data_full = wr_hbm_data_full;
+  assign dbg_reg_hbm_wr_fifo_cntrl_empty = rd_hbm_cntrl_empty;
+  assign dbg_reg_hbm_wr_fifo_data_empty = rd_hbm_data_empty;
+  assign dbg_wr_hbm_data_ack = wr_hbm_data_ack;
+  assign dbg_wr_hbm_cntrl_ack = wr_hbm_cntrl_ack;
+  assign dbg_rd_hbm_data_valid = rd_hbm_data_valid;
+  assign dbg_rd_hbm_cntrl_valid = rd_hbm_cntrl_valid;
+  assign dbg_temp_rd_hbm_cntrl_add = temp_rd_hbm_cntrl_add;
+  assign dbg_temp_rd_hbm_data = temp_rd_hbm_data; 
+  assign dbg_rd_hbm_cntrl_en = rd_hbm_cntrl_en;
+  assign dbg_rd_hbm_data_en = rd_hbm_data_en;
+  assign dbg_reg_wr_hbm_data = reg_wr_hbm_data;
+  assign dbg_reg_wr_hbm_cntrl_add = reg_wr_hbm_cntrl_add;
+  assign dbg_rd_hbm_data = rd_hbm_data;
+  assign dbg_rd_hbm_cntrl_add = rd_hbm_cntrl_add;
+  assign dbg_rd_req = RD_REQ;
+  assign dbg_m_axis_rx_TVALID = m_axis_rx_TVALID;
+  assign dbg_reg_rd_hbm_cntrl_add = reg_rd_hbm_cntrl_add_sm;
+  assign dbg_m_axis_rx_TLAST = m_axis_rx_TLAST;
+  assign dbg_reg_m_axis_rx_TADD = reg_m_axis_rx_TADD;
+  assign dbg_reg_m_axis_rx_TADD_VALID = reg_m_axis_rx_TADD_VALID;
+
 
   // ***************************************************************************************************************************************************************************************
-  // Write HBM Data Stream FIFO
+  // Write HBM Address and Data store FIFO
   // ***************************************************************************************************************************************************************************************
+
+ //HBM write Control FIFO Signals
+ wire [31:0] wr_hbm_cntrl_add;
+ reg rd_hbm_cntrl_en;
+ wire [31:0]rd_hbm_cntrl_add;
+ reg [31:0] temp_rd_hbm_cntrl_add;
+ wire wr_hbm_cntrl_full;
+ wire rd_hbm_cntrl_empty;
+ wire rd_hbm_cntrl_valid;
+ wire wr_hbm_cntrl_rst_busy;
+ wire rd_hbm_cntrl_rst_busy;
+ wire wr_hbm_cntrl_ack;
  
- //Assign HBM Write AXI stream signals
- //wire s_axis_hbm_tvalid;
- //wire s_axis_hbm_tready;
- //wire [DWIDTH-1:0] s_axis_hbm_tdata;
- //wire [NUM_DATA_BYTES-1:0] s_axis_hbm_tstrb;
- //wire s_axis_hbm_tlast;
- //wire [ATWIDTH-1:0] s_axis_hbm_tid;
- //reg m_axis_hbm_tvalid;
- //reg m_axis_hbm_tready;
- //wire [DWIDTH-1:0] m_axis_hbm_tdata;
- //wire [NUM_DATA_BYTES-1:0] m_axis_hbm_tstrb;
- //wire m_axis_hbm_tlast;
- //wire [ATWIDTH-1:0] m_axis_hbm_tid;
- //wire [31:0] axis_hbm_wr_data_count;
- //wire [31:0] axis_hbm_rd_data_count;
- //wire almost_hbm_fifo_empty;
- //wire almost_hbm_fifo_full;
  
-  //axis_hbm_data_fifo_0 axis_hbm_data_fifo_0_inst_wr (
+ //Just adding the address to the control FIFO for now. There are 5 spare bits, which could be used for the tag, if necessary
+ assign wr_hbm_cntrl_add = {5'b0, WR_ADDRESS};
+ 
+ fifo_generator_wr_hbm_cntrl_0 fifo_generator_wr_hbm_cntrl_0_inst (
   
-  //  .s_axis_aresetn(!RST),
-  //  .s_axis_aclk(CLK),
-  //  .s_axis_tdata(reg_s_axis_tx_TDATA),
-  //  .s_axis_tvalid(reg_s_axis_tx_TVALID),
-  //  .s_axis_tready(s_axis_hbm_tready),
-  //  .s_axis_tstrb(reg_s_axis_tx_TSTROBE),
-  //  .s_axis_tlast(reg_s_axis_tx_TLAST),
-  //  .s_axis_tid(reg_s_axis_tx_TADD_ID),
-    
-  //  .m_axis_tvalid(s_axis_hbm_tvalid),
-  //  .m_axis_tready(s_axis_tx_TREADY),
-  //  .m_axis_tdata(m_axis_hbm_tdata),
-  //  .m_axis_tstrb(m_axis_hbm_tstrb), 
-  //  .m_axis_tlast(m_axis_hbm_tlast),
-  // .m_axis_tid(m_axis_hbm_tid),
-  //  .axis_wr_data_count(axis_hbm_wr_data_count),
-  //  .axis_rd_data_count(axis_hbm_rd_data_count),
-  //  .almost_empty(almost_hbm_fifo_empty),
-  //  .almost_full(almost_hbm_fifo_full)
-  //);
+    .srst(RST),
+    .clk(CLK),
+    .din(wr_hbm_cntrl_add),
+    .wr_en(WR_REQ),
+    .rd_en(rd_hbm_cntrl_en),
+    .dout(rd_hbm_cntrl_add),
+    .full(wr_hbm_cntrl_full),
+    .wr_ack(wr_hbm_cntrl_ack),
+    .empty(rd_hbm_cntrl_empty),
+    .valid(rd_hbm_cntrl_valid),
+    .wr_rst_busy(wr_hbm_cntrl_rst_busy),
+    .rd_rst_busy(rd_hbm_cntrl_rst_busy)
+  );
   
+ //HBM write Data FIFO Signals
+ wire [DWIDTH-1:0] wr_hbm_data;
+ reg rd_hbm_data_en;
+ wire [DWIDTH-1:0]rd_hbm_data;
+ reg [DWIDTH-1:0] temp_rd_hbm_data; 
+ wire wr_hbm_data_full;
+ wire wr_hbm_data_ack;
+ wire rd_hbm_data_empty;
+ wire rd_hbm_data_valid;
+ wire wr_hbm_data_rst_busy;
+ wire rd_hbm_data_rst_busy;
+
+ //Just adding the address to the control FIFO for now. There are 5 spare bits, which could be used for the tag, if necessary
+ assign wr_hbm_data = DATA_IN; 
+ 
+ fifo_generator_wr_hbm_data_0 fifo_generator_wr_hbm_data_0_inst (
+  
+    .srst(RST),
+    .clk(CLK),
+    .din(wr_hbm_data),
+    .wr_en(WR_REQ),
+    .rd_en(rd_hbm_data_en),
+    .dout(rd_hbm_data),
+    .full(wr_hbm_data_full),
+    .wr_ack(wr_hbm_data_ack),
+    .empty(rd_hbm_data_empty),
+    .valid(rd_hbm_data_valid),
+    .wr_rst_busy(wr_hbm_data_rst_busy),
+    .rd_rst_busy(rd_hbm_data_rst_busy)
+  );
+  
+  //State machine AXI_ERROR_RESP Pulse Generate state elements
+  
+  // Signals used in this state machine;
+  //reg axi_wr_err_resp_pulse;
+  //reg [1:0] reg_TX_AXI_ERROR_RESP;
+  //reg reg_s_axis_tx_RESP_RDY;
+  
+  reg reg_s_axis_tx_ready;
+  reg reg_s_axis_tadd_ready;
+  reg [DWIDTH-1:0] reg_wr_hbm_data;
+  reg [31:0] reg_wr_hbm_cntrl_add;
+  
+
+  //assign TX_AXI_ERROR_RESP = reg_TX_AXI_ERROR_RESP;
+  //assign s_axis_tx_RESP_RDY = reg_s_axis_tx_RESP_RDY;
+
   
   // State machine state vector elements
-  localparam STATE_IDLE         = 4'd0; // Default state: enter on power up or reset, exit on INIT_DONE == 1'b1
-  localparam WAIT_AXI_TX_RDY    = 4'd1; // Wait for AXI TX bus to become available
-  localparam STATE_WR_DATA      = 4'd2; // Issue write add data and transactions
-  localparam STATE_WR_RESP_DATA = 4'd3; // Wait for write response data and check for errors
-  localparam STATE_CHK_RD_DATA  = 4'd4; // Check for read data
+  localparam STATE_IDLE          = 4'd0; // Default state: enter on power up or reset, exit on INIT_DONE == 1'b1
+  localparam WAIT_AXI_TX_RDY     = 4'd1; // Wait for AXI TX bus to become available
+  localparam STATE_WR_DATA       = 4'd2; // Issue write add transactions  
+  localparam STATE_RD_DATA       = 4'd3; // Check for read data
   
   // ***************************************************************************************************************************************************************************************
   // Write State Machine: Write Data Transmit
@@ -329,18 +405,35 @@ module axi_rd_wr_state_machine #(
     reg_s_axis_tx_TDATA[DWIDTH-1:0] <= data_zero;
     reg_s_axis_tx_TVALID <= 1'b0;
     reg_s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= strobe_zero; //Write Data Strobe
-    reg_s_axis_tx_TLAST <= 1'b1; //burst is one, so each transfer is the last
+    //reg_s_axis_tx_TLAST <= 1'b0; //burst is one, so each transfer is the last
+    rd_hbm_data_en <= 1'b0;
+    rd_hbm_cntrl_en <= 1'b0;
+    temp_rd_hbm_data <= 256'b0;
+    temp_rd_hbm_cntrl_add <= 32'b0;
+    
+    reg_s_axis_tx_ready <= 1'b1;
+    reg_wr_hbm_data <= DATA_IN;
+    reg_wr_hbm_cntrl_add <=  {5'b0, WR_ADDRESS};
+    
+    //axi_wr_err_resp_pulse <= 1'b0;
+    //reg_TX_AXI_ERROR_RESP <= 2'b0;
+    //reg_s_axis_tx_RESP_RDY <= 1'b0;
      
   end else begin
       reg_s_axis_tx_TADD_LENGTH[7:0] <= 8'b00000000; //burst length 1
       reg_s_axis_tx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC
       reg_s_axis_tx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
-      reg_s_axis_tx_TLAST <= 1'b1; //AI: burst is one, so each transfer is the last
+      //reg_s_axis_tx_TLAST <= 1'b1; //AI: burst is one, so each transfer is the last
+      reg_wr_hbm_data <= DATA_IN;
+      reg_wr_hbm_cntrl_add <=  {5'b0, WR_ADDRESS};
+      wr_req_rdy <= 1'b1;
       case (wr_axi_state)
         // State: Entry to state machine (from reset)
         STATE_IDLE: begin
           wr_axi_state <= STATE_IDLE;
-          if (INIT_DONE == 1'b1 && s_axis_tx_TREADY == 1'b1) begin // We cannot issue any AXI Transactions if the HBM is not initialized!
+          rd_hbm_data_en <= 1'b0;
+          rd_hbm_cntrl_en <= 1'b0;
+          if (INIT_DONE == 1'b1 && wr_hbm_data_full == 1'b0 && wr_hbm_cntrl_full == 1'b0) begin // We cannot issue any AXI Transactions if the HBM is not initialized!
             //wait_for_time_before_bus_trans_cnt <= wait_for_time_before_bus_trans_cnt + 1'b1; // Give some time after HBM have initialize before doing AXI transactions
             wr_req_rdy <= 1'b1;
             wr_axi_state <= WAIT_AXI_TX_RDY;
@@ -353,7 +446,9 @@ module axi_rd_wr_state_machine #(
           //end        
         end
         WAIT_AXI_TX_RDY: begin
-          if (s_axis_tx_TREADY == 1'b1) begin // Make sure AXI TX FIFO is not FULL  
+          rd_hbm_data_en <= 1'b1;
+          rd_hbm_cntrl_en <= 1'b1;
+          if (wr_hbm_data_full == 1'b0 && wr_hbm_cntrl_full == 1'b0) begin // Make sure user TX FIFO is not FULL  
             wr_axi_state <= STATE_WR_DATA;
             wr_req_rdy <= 1'b1;
           end else begin
@@ -361,32 +456,45 @@ module axi_rd_wr_state_machine #(
             wr_req_rdy <= 1'b0;            
           end
         end
-        // State:Write Address Data (ignoring the subordinate write address ready signals for now. I assume it can handle the throughput with buffers and the data write ready signal should
-        // be good enough
+        //Write Data
         STATE_WR_DATA: begin
           wr_axi_state <= STATE_WR_DATA;
-          //if write is enabled            
-          if (WR_REQ == 1'b1) begin // Write to AXI-S Tx      
-            //Write Address
-            reg_s_axis_tx_TADD_VALID <= 1'b1; // Assert the write Address Data Valid
-            reg_s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {HBM_Memory_Bank_Sel, WR_ADDRESS, 5'b000000};  //Assert Write Address
-            reg_s_axis_tx_TADD_ID[ATWIDTH-1:0] <= WR_TAG_IN[ATWIDTH-1:0];
-            //Write Data
-            reg_s_axis_tx_TDATA[DWIDTH-1:0] <= DATA_IN;
-            reg_s_axis_tx_TVALID <= 1'b1;
-            reg_s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= strobe_one; //Write Data Strobe
-            //reg_s_axis_tx_TLAST <= 1'b1; //AI: burst is one, so each transfer is the last
-            wr_req_count <= wr_req_count + 1'b1;
-          end else begin
-            //Write Address
-            reg_s_axis_tx_TADD_VALID <= 1'b0; // Assert the write Address Data Valid
-            reg_s_axis_tx_TVALID <= 1'b0;
-            reg_s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= strobe_zero; //Write Data Strobe
-            //reg_s_axis_tx_TLAST <= 1'b0; //burst is one, so each transfer is the last
-            //wr_req_rdy <= 1'b0; //AI: disable this      
-          end
-          //if AXI bus is not ready, then deassert write ready signals  
-          if(s_axis_tx_TREADY == 1'b1) begin
+          //Address Signals
+
+          //rd_hbm_data_en <= 1'b1;
+          //rd_hbm_cntrl_en <= 1'b1; //Disable FIFO read for address
+          //if data is valid at the FIFO output
+          if( rd_hbm_data_valid == 1'b1 && rd_hbm_cntrl_valid == 1'b1) begin
+             temp_rd_hbm_cntrl_add <= rd_hbm_cntrl_add; 
+             temp_rd_hbm_data <= rd_hbm_data; 
+           end  
+          //if AXI tx ready signal is available
+          
+          if (s_axis_tx_TREADY == 1'b1) begin          
+          //if (reg_s_axis_tx_ready == 1'b1) begin 
+             reg_s_axis_tx_TADD_VALID <= 1'b0; // Assert the write Address Data Valid
+             reg_s_axis_tx_TADD [AXI_ADD_WIDTH-1:0] <= {HBM_Memory_Bank_Sel, temp_rd_hbm_cntrl_add[AWIDTH-1:0], 5'b00000};  //Assert Write Address
+             reg_s_axis_tx_TADD_ID[ATWIDTH-1:0] <= WR_TAG_IN[ATWIDTH-1:0];
+             //Data Signals
+             reg_s_axis_tx_TVALID <= 1'b0;
+             reg_s_axis_tx_TDATA[DWIDTH-1:0] <= temp_rd_hbm_data;            
+             reg_s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= strobe_one; //Write Data Strobe
+             rd_hbm_data_en <= 1'b1;
+             rd_hbm_cntrl_en <= 1'b1; //Enable FIFO read
+             //reg_s_axis_tx_TLAST <= 1'b1;
+             wr_req_count <= wr_req_count + 1'b1;
+           //Buffer data as AXI is not ready for writing  
+           end else begin
+             rd_hbm_data_en <= 1'b0;
+             rd_hbm_cntrl_en <= 1'b0; //Disable FIFO read for address
+             reg_s_axis_tx_TVALID <= 1'b0;
+             reg_s_axis_tx_TADD_VALID <= 1'b0;           
+             reg_s_axis_tx_TSTROBE[NUM_DATA_BYTES-1:0] <= strobe_zero; //Write Data Strobe
+             //reg_s_axis_tx_TLAST <= 1'b0;                
+           end  
+           
+          //if FIFO is full, then deassert write ready signals only  
+          if(wr_hbm_cntrl_full == 1'b0 && wr_hbm_data_full == 1'b0) begin
             wr_req_rdy <= 1'b1;
           end else begin
             wr_req_rdy <= 1'b0;
@@ -398,6 +506,9 @@ module axi_rd_wr_state_machine #(
 
  
  assign WR_READY = wr_req_rdy;
+ 
+ //reg reg_m_axis_rx_TVALID;
+ reg [31:0] reg_rd_hbm_cntrl_add_sm;
  
   // ***************************************************************************************************************************************************************************************
   // Read state machine 
@@ -423,15 +534,18 @@ module axi_rd_wr_state_machine #(
     reg_DATA_VALID <= 1'b0;
     rd_req_count <= 64'd0;
     r_data_valid_rx_hbm_valid_count <= 64'b0;
+    reg_rd_hbm_cntrl_add_sm <=  {5'b0, RD_ADDRESS};
+    //reg_m_axis_rx_TVALID <= 1'b1;
     
   end else begin
    
             
-    reg_m_axis_rx_TREADY <= 1'b1; // After reset this module is always ready
+    //reg_m_axis_rx_TREADY <= 1'b1; // After reset this module is always ready
     rd_req_rdy <= 1'b1; //After reset this module in always ready
     reg_m_axis_rx_TADD_SIZE[2:0] <=  3'd5; //Bytes in transfer 32 bytes
     reg_m_axis_rx_TADD_LENGTH[7:0] <= 8'b00000000; //burst length 1
     reg_m_axis_rx_TADD_BURST[1:0] <= 2'b01; //Bust Type INC 
+    reg_rd_hbm_cntrl_add_sm <=  {5'b0, RD_ADDRESS};
           
     if ((m_axis_rx_TVALID == 1'b1) && (INIT_DONE == 1'b1))
     begin
@@ -444,21 +558,21 @@ module axi_rd_wr_state_machine #(
     STATE_IDLE: begin
         rd_axi_state <= STATE_IDLE;
         if (INIT_DONE == 1'b1) begin
-            rd_axi_state <= STATE_CHK_RD_DATA;
+            rd_axi_state <= STATE_RD_DATA;
         end
     end
-    STATE_CHK_RD_DATA: begin
-        rd_axi_state <= STATE_CHK_RD_DATA;
+    STATE_RD_DATA: begin
+        rd_axi_state <= STATE_RD_DATA;
         //if read is enabled
         if (RD_REQ == 1'b1) begin  // Read request        
-            reg_m_axis_rx_TADD_VALID <= 1'b1; // Assert the Read Address Data Valid
-            reg_m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {HBM_Memory_Bank_Sel, RD_ADDRESS, 5'b00000};  //Read Address to zero
+            reg_m_axis_rx_TADD_VALID <= 1'b0; // Assert the Read Address Data Valid
+            reg_m_axis_rx_TADD [AXI_ADD_WIDTH-1:0] <= {HBM_Memory_Bank_Sel, RD_ADDRESS, 5'b00000};  //Read Address
             reg_m_axis_rx_TADD_ID[ATWIDTH-1:0] <= RD_TAG_IN[ATWIDTH-1:0];
-            //rd_req_rdy <= 1'b1;
+            rd_req_rdy <= 1'b1;
             rd_req_count <= rd_req_count + 1'b1;
-        end else begin
+        //end else begin
             //Write Address
-            reg_m_axis_rx_TADD_VALID <= 1'b0; // Assert the read Address Data Valid
+        //    reg_m_axis_rx_TADD_VALID <= 1'b0; // Assert the read Address Data Valid
         end
         if (m_axis_rx_TVALID == 1'b1) begin
             reg_DATA_OUT[DWIDTH-1:0] <= m_axis_rx_TDATA[DWIDTH-1:0];
@@ -467,7 +581,8 @@ module axi_rd_wr_state_machine #(
         end else begin
             reg_DATA_VALID <= 1'b0;
 
-        end
+        end       
+        
     end
     endcase  
    end    
@@ -477,9 +592,9 @@ assign RD_READY = rd_req_rdy;
   
   
   //State machine AXI_ERROR_RESP Pulse Generate state elements
-  localparam STATE_CHECK_ERROR = 3'd0; // Default state: wait for FLIT_ERROR_RESP error to occur, exit when FLIT_ERROR_RESP occurs 
-  localparam STATE_ASSERT_ERROR = 3'd1; //Assert FLIT_ERROR_RESP_PULSE signal  
-  localparam STATE_DEASSERT_ERROR = 3'd2; //Deassert FLIT_ERROR_RESP_PULSE and exit to STATE_CHECK_ERROR when FLIT_ERROR_RESP is low again
+  localparam STATE_CHECK_ERROR = 3'd0; // Default state: wait for ERROR_RESP error to occur, exit when ERROR_RESP occurs 
+  localparam STATE_ASSERT_ERROR = 3'd1; //Assert ERROR_RESP_PULSE signal  
+  localparam STATE_DEASSERT_ERROR = 3'd2; //Deassert ERROR_RESP_PULSE and exit to STATE_CHECK_ERROR when ERROR_RESP is low again
   
   // Signals used in this state machine
   reg [2:0] axi_wr_err_resp_pulse_gen_state;
@@ -503,9 +618,9 @@ assign RD_READY = rd_req_rdy;
     reg_TX_AXI_ERROR_RESP <= 2'b00;
    
   end else begin
-      reg_s_axis_tx_RESP_RDY <= 1'b1;  //Assert Response is Ready
-      case (axi_wr_err_resp_pulse_gen_state)
-        // State: Entry to state machine (from reset)
+     reg_s_axis_tx_RESP_RDY <= 1'b1;  //Assert Response is Ready
+     case (axi_wr_err_resp_pulse_gen_state)
+        //State: Entry to state machine (from reset)
         STATE_CHECK_ERROR: begin
           axi_wr_err_resp_pulse <= 1'b0;
           //Wait until an AXI error response is detected on either read and write and then exit to state that asserts error
@@ -520,9 +635,9 @@ assign RD_READY = rd_req_rdy;
         end
         STATE_ASSERT_ERROR: begin
           //Assert the error on the FLIT error response pulse signal
-          axi_wr_err_resp_pulse <= 1'b1;
-          reg_TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
-          axi_wr_err_resp_pulse_gen_state <= STATE_DEASSERT_ERROR;
+         axi_wr_err_resp_pulse <= 1'b1;
+         reg_TX_AXI_ERROR_RESP <= s_axis_tx_TRESP;
+         axi_wr_err_resp_pulse_gen_state <= STATE_DEASSERT_ERROR;
         end
         STATE_DEASSERT_ERROR: begin
           axi_wr_err_resp_pulse <= 1'b0;
@@ -536,7 +651,7 @@ assign RD_READY = rd_req_rdy;
             axi_wr_err_resp_pulse_gen_state <= STATE_DEASSERT_ERROR;
           end
         end                    
-      endcase
+     endcase
     end    
   end
   

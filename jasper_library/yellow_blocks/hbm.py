@@ -31,6 +31,8 @@ class hbm(YellowBlock): # class hmc inherits from yellowblock.py
             hbm.add_parameter('AXI_ADD_WIDTH', "33")
             hbm.add_parameter('AXI_BURST_SIZE', "1")
             hbm.add_parameter('ATWIDTH', "6")
+            hbm.add_parameter('TEST_MODE', "True")
+
 
             # AXI Interface Ports 0
             hbm.add_port('m_axis_rx_TADD_Link0', 's_axi_0_araddr',  dir='out', width=32)
