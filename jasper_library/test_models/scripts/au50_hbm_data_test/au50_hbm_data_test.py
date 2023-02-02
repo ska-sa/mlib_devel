@@ -4,7 +4,7 @@ import casperfpga,time
 
 #parameters
 #snapshot read length (can be adjusted)
-read_length = 1400; 
+read_length = 600; 
 
 
 #Connecting to the Alveo U50
@@ -18,10 +18,10 @@ print('programming the Alveo U50...')
 #First light HBM tutorial
 #f.get_system_information('au50_hbm_data_test_2022-11-23_1954.fpg')
 #f.transport.upload_to_ram_and_program('au50_hbm_data_test_2022-11-23_1954.fpg')
-#f.get_system_information('au50_hbm_data_test_ila_wr_arlen_fix_add_data_fix_2022-12-01_0711.fpg')
-#f.transport.upload_to_ram_and_program('au50_hbm_data_test_ila_wr_arlen_fix_add_data_fix_2022-12-01_0711.fpg')
-f.get_system_information('au50_hbm_data_test_2022-12-06_1259.fpg')
-f.transport.upload_to_ram_and_program('au50_hbm_data_test_2022-12-06_1259.fpg')
+f.get_system_information('au50_hbm_data_test_hbm_axi_tg_debug_5_ila_2023-01-24_1350.fpg')
+f.transport.upload_to_ram_and_program('au50_hbm_data_test_hbm_axi_tg_debug_5_ila_2023-01-24_1350.fpg')
+#f.get_system_information('au50_hbm_data_test_hbm_axi_tg_debug_10_ila_2023-01-26_1054.fpg')
+#f.transport.upload_to_ram_and_program('au50_hbm_data_test_hbm_axi_tg_debug_10_ila_2023-01-26_1054.fpg')
 
 print('done')
 
@@ -59,7 +59,7 @@ f.registers.reg_cntrl.write(wr_rd_en= True)
 print('done')
 
 #wait a few seconds for snap shots to fill
-#time.sleep(2)
+time.sleep(5)
 
 #grab the snapshots
 print('reading the snapshots...')
@@ -70,7 +70,7 @@ print('done')
 
 #disable the HBM write and read process
 print('disabling the HBM write and read process...')
-f.registers.reg_cntrl.write(wr_rd_en = False)
+f.registers.reg_cntrl.write(wr_rd_en = True)
 print('done')
 
 #read back the status registers
@@ -102,7 +102,7 @@ print('done')
 print('Displaying the snapshot block data #2...')
 print('HBM SNAPSHOT READ CAPTURED INPUT')
 print('---------------------------------')
-print('Num rd_en rd_addr rd_tag rd_data rd_rdy')
+print('Num rd_en rd_addr rd_tag rd_rdy')
 for i in range(0, read_length):
   print('[%i] %i %i %i %i'% \
                                       (i, hbm_in_rd['rd_en'][i], hbm_in_rd['rd_addr'][i], \
