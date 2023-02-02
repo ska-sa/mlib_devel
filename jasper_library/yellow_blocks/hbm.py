@@ -31,7 +31,7 @@ class hbm(YellowBlock): # class hmc inherits from yellowblock.py
             hbm.add_parameter('AXI_ADD_WIDTH', "33")
             hbm.add_parameter('AXI_BURST_SIZE', "1")
             hbm.add_parameter('ATWIDTH', "6")
-            hbm.add_parameter('TEST_MODE', "True")
+            hbm.add_parameter('TEST_MODE', "1")
 
 
             # AXI Interface Ports 0
@@ -372,6 +372,8 @@ class hbm(YellowBlock): # class hmc inherits from yellowblock.py
     def initialize(self):
 
         self.add_source('hbm/*.v')
+        self.add_source('hbm/ip/fifo_generator_wr_hbm_cntrl_0/*.xci')
+        self.add_source('hbm/ip/fifo_generator_wr_hbm_data_0/*.xci')
         # This block takes an HBM memory bank site and should prevent other blocks from using it
         self.exc_requires = ['hbm_mem_bank%d' % self.mem_bank]
 

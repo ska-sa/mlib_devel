@@ -23,7 +23,7 @@ module axi_rd_wr_state_machine #(
     parameter AXI_ADD_WIDTH         = 33,
     parameter AXI_BURST_SIZE        = 1,
     parameter ATWIDTH               = 6,  //AXI Tag Width
-    parameter TEST_MODE             = True //If True, this enables the internal test mode with internally generated addressing and data ramps. If False,
+    parameter TEST_MODE             = 1 //If True, this enables the internal test mode with internally generated addressing and data ramps. If False,
                                            //then the HBM custom interface is enabled and the address and data is externally provided.  
 
 

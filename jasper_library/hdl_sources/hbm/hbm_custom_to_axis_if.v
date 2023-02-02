@@ -24,7 +24,7 @@ module hbm_custom_to_axis_if #(
     parameter AXI_ADD_WIDTH         = 33,
     parameter AXI_BURST_SIZE        = 1,
     parameter ATWIDTH               = 6,  //AXI Tag Width
-    parameter TEST_MODE             = True //If True then this enables the internal test mode. If False then it enables the normal mode. 
+    parameter TEST_MODE             = 1 //If True then this enables the internal test mode. If False then it enables the normal mode.
 )(
 
     //Simulink Ports 
