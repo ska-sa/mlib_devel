@@ -1,7 +1,7 @@
 create_clock -period 6.206 [get_ports gt_ref_clk_0_clk_p]
-set_property PACKAGE_PIN N36                     [get_ports gt_ref_clk_0_clk_p]
 #set_property -dict {IOSTANDARD LVDS            } [get_ports gt_ref_clk_0_clk_p]
-set_property PACKAGE_PIN N37                     [get_ports gt_ref_clk_0_clk_n]
+set_property PACKAGE_PIN N37 [get_ports gt_ref_clk_0_clk_n]
+set_property PACKAGE_PIN N36 [get_ports gt_ref_clk_0_clk_p]
 #set_property -dict {IOSTANDARD LVDS            } [get_ports gt_ref_clk_0_clk_n]
 
 create_clock -period 6.206 [get_ports gt_ref_clk_0_clk_p]
@@ -18,7 +18,6 @@ create_clock -period 10.000 [get_ports hbm_clk_clk_p]
 
 ## QSPF28_1 lane 0:
 ##
-set_property LOC GTYE4_CHANNEL_X0Y28 [get_cells {au50_bd_inst/hgbe/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST}]
 set_property PACKAGE_PIN J45 [get_ports {gt_serial_port_0_grx_p[0]}]
 set_property PACKAGE_PIN J46 [get_ports {gt_serial_port_0_grx_n[0]}]
 set_property PACKAGE_PIN D42 [get_ports {gt_serial_port_0_gtx_p[0]}]
@@ -26,7 +25,6 @@ set_property PACKAGE_PIN D43 [get_ports {gt_serial_port_0_gtx_n[0]}]
 
 ## QSPF28_1 lane 1:
 ##
-set_property LOC GTYE4_CHANNEL_X0Y29 [get_cells {au50_bd_inst/hgbe/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST}]
 set_property PACKAGE_PIN G45 [get_ports {gt_serial_port_0_grx_p[1]}]
 set_property PACKAGE_PIN G46 [get_ports {gt_serial_port_0_grx_n[1]}]
 set_property PACKAGE_PIN C40 [get_ports {gt_serial_port_0_gtx_p[1]}]
@@ -34,7 +32,6 @@ set_property PACKAGE_PIN C41 [get_ports {gt_serial_port_0_gtx_n[1]}]
 
 ## QSPF28_2 lane 2:
 ##
-set_property LOC GTYE4_CHANNEL_X0Y30 [get_cells {au50_bd_inst/hgbe/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST}]
 set_property PACKAGE_PIN F43 [get_ports {gt_serial_port_0_grx_p[2]}]
 set_property PACKAGE_PIN F44 [get_ports {gt_serial_port_0_grx_n[2]}]
 set_property PACKAGE_PIN B42 [get_ports {gt_serial_port_0_gtx_p[2]}]
@@ -42,7 +39,6 @@ set_property PACKAGE_PIN B43 [get_ports {gt_serial_port_0_gtx_n[2]}]
 
 ## QSPF28_2 lane 3:
 ##
-set_property LOC GTYE4_CHANNEL_X0Y31 [get_cells {au50_bd_inst/hgbe/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]
 set_property PACKAGE_PIN E45 [get_ports {gt_serial_port_0_grx_p[3]}]
 set_property PACKAGE_PIN E46 [get_ports {gt_serial_port_0_grx_n[3]}]
 set_property PACKAGE_PIN A40 [get_ports {gt_serial_port_0_gtx_p[3]}]
@@ -88,10 +84,10 @@ set_property IOSTANDARD LVDS [get_ports cmc_clk_clk_p]
 set_property DQS_BIAS TRUE [get_ports cmc_clk_clk_p]
 
 # HBM_CLK
-set_property PACKAGE_PIN BB18                    [get_ports hbm_clk_clk_p]
-set_property -dict {IOSTANDARD LVDS            } [get_ports hbm_clk_clk_p]
-set_property PACKAGE_PIN BC18                    [get_ports hbm_clk_clk_n]
-set_property -dict {IOSTANDARD LVDS            } [get_ports hbm_clk_clk_n]
+set_property -dict {IOSTANDARD LVDS} [get_ports hbm_clk_clk_p]
+set_property PACKAGE_PIN BB18 [get_ports hbm_clk_clk_p]
+set_property PACKAGE_PIN BC18 [get_ports hbm_clk_clk_n]
+set_property -dict {IOSTANDARD LVDS} [get_ports hbm_clk_clk_n]
 
 
 
@@ -125,10 +121,13 @@ set_property -dict {IOSTANDARD LVDS            } [get_ports hbm_clk_clk_n]
 
 #HBM Timing constraints - 100MHz HBM clock and AXI clock
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins au50_bd_inst/clk_wiz_0/inst/mmcme4_adv_inst/CLKOUT0]] -group [get_clocks -of_objects [get_pins au50_bd_inst/hbm/clk_wiz_1/inst/mmcme4_adv_inst/CLKOUT0]]
-
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks hbm_clk_clk_p] -group [get_clocks -include_generated_clocks cmc_clk_clk_p]
+#AI: Cutting the clock relationships the same as Amit's working design for now (axi_bram_ctrl_lmb_BRAM/_PORTA_CLK, GTYE4_CHAANEL_TXOUTCLKPCS[0], GTYE4_CHAANEL_TXOUTCLKPCS[1], GTYE4_CHAANEL_TXOUTCLKPCS[2], GTYE4_CHAANEL_TXOUTCLKPCS[3], txoutclk_out[0]_1, rxoutclk_out[0])
+#set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/design_1_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.design_1_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/design_1_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.design_1_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/design_1_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.design_1_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/design_1_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.design_1_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/design_1_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.design_1_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/design_1_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.design_1_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/RXOUTCLK}]] -group [get_clocks -of_objects [get_pins au50_bd_inst/hgbe/xdma_0/inst/pcie4c_ip_i/inst/design_1_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]]
+#WN: Updated the clocks for the toolflow design and also shorted the names
+set_clock_groups -asynchronous -group [get_clocks clk_out1_au50_bd_clk_wiz_0_0] -group [get_clocks {GTYE4_CHANNEL_TXOUTCLKPCS[0]}] -group [get_clocks {GTYE4_CHANNEL_TXOUTCLKPCS[1]}] -group [get_clocks {GTYE4_CHANNEL_TXOUTCLKPCS[2]}] -group [get_clocks {GTYE4_CHANNEL_TXOUTCLKPCS[3]}] -group [get_clocks {txoutclk_out[0]}] -group [get_clocks {rxoutclk_out[0]}] -group [get_clocks -of_objects [get_pins au50_bd_inst/xdma_0/inst/pcie4c_ip_i/inst/au50_bd_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]]
 
-connect_debug_port dbg_hub/clk [get_nets au50_bd_inst/hbm/hbm_0/APB_0_PCLK]
+
 #set_input_delay -clock [get_clocks {VIRTUAL_axi4lite_aclk_0_1}] -min -add_delay 0 [get_ports {pcie_perstn}]
 #set_input_delay -clock [get_clocks {VIRTUAL_axi4lite_aclk_0_1}] -max -add_delay 4 [get_ports {pcie_perstn}]
 #set_input_delay -clock [get_clocks {pcie_refclk_clk_p}] -min -add_delay 0 [get_ports {pcie_perstn}]
@@ -195,10 +194,6 @@ set_operating_conditions -design_power_budget 63.0
 
 
 
-#AI: Cutting the clock relationships the same as Amit's working design for now (axi_bram_ctrl_lmb_BRAM/_PORTA_CLK, GTYE4_CHAANEL_TXOUTCLKPCS[0], GTYE4_CHAANEL_TXOUTCLKPCS[1], GTYE4_CHAANEL_TXOUTCLKPCS[2], GTYE4_CHAANEL_TXOUTCLKPCS[3], txoutclk_out[0]_1, rxoutclk_out[0])
-#set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/design_1_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.design_1_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/design_1_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.design_1_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/design_1_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.design_1_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/design_1_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.design_1_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/design_1_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.design_1_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/design_1_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.design_1_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/RXOUTCLK}]] -group [get_clocks -of_objects [get_pins au50_bd_inst/hgbe/xdma_0/inst/pcie4c_ip_i/inst/design_1_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]] 
-#WN: Updated the clocks for the toolflow design and also shorted the names 
-set_clock_groups -asynchronous -group [get_clocks clk_out1_au50_bd_clk_wiz_0_0] -group [get_clocks GTYE4_CHANNEL_TXOUTCLKPCS[0]] -group [get_clocks GTYE4_CHANNEL_TXOUTCLKPCS[1]] -group [get_clocks GTYE4_CHANNEL_TXOUTCLKPCS[2]] -group [get_clocks GTYE4_CHANNEL_TXOUTCLKPCS[3]] -group [get_clocks txoutclk_out[0]] -group [get_clocks rxoutclk_out[0]] -group [get_clocks -of_objects [get_pins au50_bd_inst/xdma_0/inst/pcie4c_ip_i/inst/au50_bd_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]]
 
 #set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST/TXOUTCLKPCS}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_pins {au50_bd_inst/hgbe/cmac_usplus_0/inst/au50_bd_cmac_usplus_0_0_gt_i/inst/gen_gtwizard_gtye4_top.au50_bd_cmac_usplus_0_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_channel_container[7].gen_enabled_channel.gtye4_channel_wrapper_inst/channel_inst/gtye4_channel_gen.gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST/RXOUTCLK}]] -group [get_clocks -of_objects [get_pins au50_bd_inst/xdma_0/inst/pcie4c_ip_i/inst/au50_bd_xdma_0_0_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]]
 
@@ -218,3 +213,4 @@ resize_pblock [get_pblocks pblock_udp_core_100g_ip_1] -add {CLOCKREGION_X0Y4:CLO
 #set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks pcie_refclk_clk_p] -group [get_clocks -include_generated_clocks gt_ref_clk_0_clk_p]
 #set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks cmc_clk_clk_p] -group [get_clocks -include_generated_clocks pcie_refclk_clk_p]
 #set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks pcie_refclk_clk_p] -group [get_clocks -include_generated_clocks cmc_clk_clk_p]
+
