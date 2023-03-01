@@ -57,7 +57,10 @@ class au50(YellowBlock):
         inst.add_port('gt_serial_port_0_grx_p', 'gt_serial_port_0_grx_p',    dir='in',  parent_port=True, width=4)
         inst.add_port('gt_serial_port_0_gtx_n', 'gt_serial_port_0_gtx_n',    dir='out',  parent_port=True, width=4)
         inst.add_port('gt_serial_port_0_gtx_p', 'gt_serial_port_0_gtx_p',    dir='out',  parent_port=True, width=4)
-        
+        #HBM Output clocks (optional)
+        inst.add_port('hbm_clk_mem_bank_0', 'hbm_clk_mem_bank_0', dir='out', width=1)
+        inst.add_port('hbm_clk_mem_bank_1', 'hbm_clk_mem_bank_1', dir='out', width=1)
+
         inst.add_port('M04_AXI_0_araddr',  'M_AXI_araddr',   dir='out', width=32)
         inst.add_port('M04_AXI_0_arready', 'M_AXI_arready',  dir='in', width=1)
         inst.add_port('M04_AXI_0_arvalid', 'M_AXI_arvalid',  dir='out', width=1)
@@ -400,7 +403,17 @@ class au50(YellowBlock):
         tcl_cmds['pre_synth'] += ['set_property library axi4_lite [get_files [get_property directory [current_project]]/myproj.srcs/sources_1/imports/axi4_lite/*.vhd]']
 
 
-        # run the block diagram generation script
+        # run the block diagram generation script and pass the clock frequencies as arguments like you would use
+        # C #include i.e. set the arguments and then source the script
+        #tcl_cmds['pre_synth'] += ['set argv [list %s %s]' % (self.platform.user_clk_rate, self.platform.user_clk_rate * 1000000)]
+        #tcl_cmds['pre_synth'] += ['set argc [llength $argv]']
+        #tcl_cmds['pre_synth'] += ['set argv0 {}'.format(self.hdl_root + '/au50_infr/au50_bd.tcl')]
+        #tcl_cmds['pre_synth'] += ['puts "This is the number of arguments: $argc"']
+        #tcl_cmds['pre_synth'] += ['puts [lindex $argv 0]']
+        #tcl_cmds['pre_synth'] += ['puts [lindex $argv 1]']
+        #tcl_cmds['pre_synth'] += ['source $argv0']
+
+
         tcl_cmds['pre_synth'] += ['source {}'.format(self.hdl_root + '/au50_infr/au50_bd.tcl')]
 
         # the follow commands open up the block diagram, set the clk_wiz to the user specified clock, then save and close the block diagram
@@ -408,7 +421,16 @@ class au50(YellowBlock):
         # them as parameters to a verilog generated MMCM. Now it is all handled in the block diagram without the need to calculate these
         # factors
         # there wasn't a way to parameterize this in the initial block diagram script, so we have to do it this way, blah!!
-        tcl_cmds['pre_synth'] += ['open_bd_design [get_files [get_property directory [current_project]]/myproj.srcs/sources_1/bd/au50_bd/au50_bd.bd]']
+        #tcl_cmds['pre_synth'] += ['open_bd_design [get_files [get_property directory [current_project]]/myproj.srcs/sources_1/bd/au50_bd/au50_bd.bd]']
+        #tcl_cmds['pre_synth'] += ['set_property -dict [list CONFIG.FREQ_HZ{%s}] [get_bd_intf_ports s_axi_0]'%(self.platform.user_clk_rate*1000000)]
+        #tcl_cmds['pre_synth'] += ['set_property -dict [list CONFIG.FREQ_HZ{%s}] [get_bd_intf_ports s_axi_1]'%(self.platform.user_clk_rate*1000000)]
+        #tcl_cmds['pre_synth'] += ['set_property -dict [list CONFIG.FREQ_HZ{%s}] [get_bd_intf_ports s_axi_2]'%(self.platform.user_clk_rate*1000000)]
+        #tcl_cmds['pre_synth'] += ['set_property -dict [list CONFIG.FREQ_HZ{%s}] [get_bd_intf_ports s_axi_3]'%(self.platform.user_clk_rate*1000000)]
+        #tcl_cmds['pre_synth'] += ['set_property -dict [list CONFIG.FREQ_HZ{%s}] [get_bd_intf_ports s_axi_4]'%(self.platform.user_clk_rate*1000000)]
+        #tcl_cmds['pre_synth'] += ['set_property -dict [list CONFIG.FREQ_HZ{%s}] [get_bd_intf_ports s_axi_5]'%(self.platform.user_clk_rate*1000000)]
+        #tcl_cmds['pre_synth'] += ['set_property -dict [list CONFIG.FREQ_HZ{%s}] [get_bd_intf_ports s_axi_6]'%(self.platform.user_clk_rate*1000000)]
+        #tcl_cmds['pre_synth'] += ['set_property -dict [list CONFIG.FREQ_HZ{%s}] [get_bd_intf_ports s_axi_7]'%(self.platform.user_clk_rate*1000000)]
+
         tcl_cmds['pre_synth'] += ['set_property -dict [list CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {%s} CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {%s} CONFIG.CLKOUT3_REQUESTED_OUT_FREQ {%s} CONFIG.CLKOUT4_REQUESTED_OUT_FREQ {%s} CONFIG.CLKOUT5_REQUESTED_OUT_FREQ {%s} CONFIG.CLKOUT6_REQUESTED_OUT_FREQ {%s}] [get_bd_cells clk_wiz_0]'%(self.platform.user_clk_rate, self.platform.user_clk_rate, self.platform.user_clk_rate,self.platform.user_clk_rate, self.platform.user_clk_rate, self.platform.user_clk_rate)]
         # because the HBM also relies on this sys_clk, we need to configure the clock frequency it expects as well.
         tcl_cmds['pre_synth'] += ['set_property -dict [list CONFIG.USER_AXI_INPUT_CLK_FREQ {%s} CONFIG.USER_AXI_INPUT_CLK1_FREQ {%s}] [get_bd_cells hbm/hbm_0]'%(self.platform.user_clk_rate,self.platform.user_clk_rate)]
