@@ -22,9 +22,11 @@ module hbm_custom_to_axis_if #(
     parameter HBM_ADD_BANK_SEL      = 0,  //0 = Memory Bank 0 (lower 4GB), 1 = Memory Bank 1 (Upper 4GB) 
     // AXI Interface 
     parameter AXI_ADD_WIDTH         = 33,
-    parameter AXI_BURST_SIZE        = 1,
+    parameter AXI_BURST_SIZE        = 16,
+    parameter AXI_BURST_SIZE_LOG2   = 4,  //LOG2(AXI_BURST_SIZE)
+    parameter AXI_BURST_LOG2        = 9,  // LOG2(NUM_DATA_BYTES x AXI_BURST_SIZE)
     parameter ATWIDTH               = 6,  //AXI Tag Width
-    parameter TEST_MODE             = 1 //If True then this enables the internal test mode. If False then it enables the normal mode.
+    parameter TEST_MODE             = 1   //If high = 1 then this enables the internal test mode. If low = 0 then it enables the normal mode.
 )(
 
     //Simulink Ports 
@@ -254,29 +256,29 @@ assign dbg_sRX_AXI_ERROR_RESP_LINK3 = sRX_AXI_ERROR_RESP_LINK3;
 
 //write tag initialised to zero for now
 wire [TWIDTH-1:0] WR_TAG_IN_LINK0;
-assign WR_TAG_IN_LINK0 = 9'd1;//{TWIDTH{1'b0}}; //generic tag zeroed
+assign WR_TAG_IN_LINK0 = 9'd0;//{TWIDTH{1'b0}}; //generic tag zeroed
 
 wire [TWIDTH-1:0] WR_TAG_IN_LINK1;
-assign WR_TAG_IN_LINK1 = 9'd2;//{TWIDTH{1'b0}}; //generic tag zeroed
+assign WR_TAG_IN_LINK1 = 9'd0;//{TWIDTH{1'b0}}; //generic tag zeroed
 
 wire [TWIDTH-1:0] WR_TAG_IN_LINK2;
-assign WR_TAG_IN_LINK2 = 9'd3;//{TWIDTH{1'b0}}; //generic tag zeroed
+assign WR_TAG_IN_LINK2 = 9'd0;//{TWIDTH{1'b0}}; //generic tag zeroed
 
 wire [TWIDTH-1:0] WR_TAG_IN_LINK3;
-assign WR_TAG_IN_LINK3 = 9'd4;//{TWIDTH{1'b0}}; //generic tag zeroed
+assign WR_TAG_IN_LINK3 = 9'd0;//{TWIDTH{1'b0}}; //generic tag zeroed
 
 //Read Tag assignment
 wire [TWIDTH-1:0] RD_TAG_IN_LINK0;
-assign RD_TAG_IN_LINK0 = 9'd5;//TAG_IN_LINK0;
+assign RD_TAG_IN_LINK0 = 9'd0;//TAG_IN_LINK0;
 
 wire [TWIDTH-1:0] RD_TAG_IN_LINK1;
-assign RD_TAG_IN_LINK1 = 9'd6;//TAG_IN_LINK1;
+assign RD_TAG_IN_LINK1 = 9'd0;//TAG_IN_LINK1;
 
 wire [TWIDTH-1:0] RD_TAG_IN_LINK2;
-assign RD_TAG_IN_LINK2 = 9'd7;//TAG_IN_LINK2;
+assign RD_TAG_IN_LINK2 = 9'd0;//TAG_IN_LINK2;
 
 wire [TWIDTH-1:0] RD_TAG_IN_LINK3;
-assign RD_TAG_IN_LINK3 = 9'd8;//TAG_IN_LINK3;
+assign RD_TAG_IN_LINK3 = 9'd0;//TAG_IN_LINK3;
 
 //Link0
 
@@ -336,6 +338,8 @@ axi_rd_wr_state_machine #(
     // AXI Interface 
     .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
     .AXI_BURST_SIZE(AXI_BURST_SIZE),
+    .AXI_BURST_SIZE_LOG2(AXI_BURST_SIZE_LOG2),
+    .AXI_BURST_LOG2(AXI_BURST_LOG2),
     .ATWIDTH(ATWIDTH),
     .TEST_MODE(TEST_MODE)
   )  
@@ -410,6 +414,8 @@ axi_rd_wr_state_machine #(
     // AXI Interface 
     .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
     .AXI_BURST_SIZE(AXI_BURST_SIZE),
+    .AXI_BURST_SIZE_LOG2(AXI_BURST_SIZE_LOG2),
+    .AXI_BURST_LOG2(AXI_BURST_LOG2),
     .ATWIDTH(ATWIDTH),
     .TEST_MODE(TEST_MODE)
   )  
@@ -484,6 +490,8 @@ axi_rd_wr_state_machine #(
     // AXI Interface 
     .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
     .AXI_BURST_SIZE(AXI_BURST_SIZE),
+    .AXI_BURST_SIZE_LOG2(AXI_BURST_SIZE_LOG2),
+    .AXI_BURST_LOG2(AXI_BURST_LOG2),
     .ATWIDTH(ATWIDTH),
     .TEST_MODE(TEST_MODE)
   )  
@@ -558,6 +566,8 @@ axi_rd_wr_state_machine #(
     // AXI Interface 
     .AXI_ADD_WIDTH(AXI_ADD_WIDTH),
     .AXI_BURST_SIZE(AXI_BURST_SIZE),
+    .AXI_BURST_SIZE_LOG2(AXI_BURST_SIZE_LOG2),
+    .AXI_BURST_LOG2(AXI_BURST_LOG2),
     .ATWIDTH(ATWIDTH),
     .TEST_MODE(TEST_MODE)
   )  

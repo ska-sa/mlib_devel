@@ -205,7 +205,7 @@ add_cells_to_pblock [get_pblocks pblock_udp_core_100g_ip_1] [get_cells -quiet [l
 resize_pblock [get_pblocks pblock_udp_core_100g_ip_1] -add {CLOCKREGION_X0Y4:CLOCKREGION_X7Y7}
 
 
-
+connect_debug_port dbg_hub/clk [get_nets au50_bd_inst/hbm/hbm_0/APB_0_PCLK]
 
 #set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks gt_ref_clk_0_clk_p] -group [get_clocks -include_generated_clocks cmc_clk_clk_p]
 #set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks cmc_clk_clk_p] -group [get_clocks -include_generated_clocks gt_ref_clk_0_clk_p]
@@ -213,4 +213,6 @@ resize_pblock [get_pblocks pblock_udp_core_100g_ip_1] -add {CLOCKREGION_X0Y4:CLO
 #set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks pcie_refclk_clk_p] -group [get_clocks -include_generated_clocks gt_ref_clk_0_clk_p]
 #set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks cmc_clk_clk_p] -group [get_clocks -include_generated_clocks pcie_refclk_clk_p]
 #set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks pcie_refclk_clk_p] -group [get_clocks -include_generated_clocks cmc_clk_clk_p]
+
+
 

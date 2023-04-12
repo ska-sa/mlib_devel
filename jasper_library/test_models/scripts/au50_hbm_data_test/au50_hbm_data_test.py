@@ -10,7 +10,7 @@ read_length = 600;
 #Connecting to the Alveo U50
 print('connecting to the Alveo U50...')
 #Host1fpg - list all alveo u50s with ports using this command: casperfpga.utils.list_alveos('10.8.96.150')
-f=casperfpga.CasperFpga('10.8.96.150', 7150)
+f=casperfpga.CasperFpga('10.8.96.160', 7152)
 print('done')
 
 #program the Alveo U50
@@ -18,8 +18,8 @@ print('programming the Alveo U50...')
 #First light HBM tutorial
 #f.get_system_information('au50_hbm_data_test_2022-11-23_1954.fpg')
 #f.transport.upload_to_ram_and_program('au50_hbm_data_test_2022-11-23_1954.fpg')
-f.get_system_information('au50_hbm_data_test_hbm_axi_tg_debug_5_ila_2023-01-24_1350.fpg')
-f.transport.upload_to_ram_and_program('au50_hbm_data_test_hbm_axi_tg_debug_5_ila_2023-01-24_1350.fpg')
+f.get_system_information('au50_hbm_data_test_ila_demo_2023-04-11_1424.fpg')
+f.transport.upload_to_ram_and_program('au50_hbm_data_test_ila_demo_2023-04-11_1424.fpg')
 #f.get_system_information('au50_hbm_data_test_hbm_axi_tg_debug_10_ila_2023-01-26_1054.fpg')
 #f.transport.upload_to_ram_and_program('au50_hbm_data_test_hbm_axi_tg_debug_10_ila_2023-01-26_1054.fpg')
 
@@ -59,7 +59,7 @@ f.registers.reg_cntrl.write(wr_rd_en= True)
 print('done')
 
 #wait a few seconds for snap shots to fill
-time.sleep(5)
+#time.sleep(5)
 
 #grab the snapshots
 print('reading the snapshots...')

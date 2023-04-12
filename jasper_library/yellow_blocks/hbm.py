@@ -29,7 +29,9 @@ class hbm(YellowBlock): # class hmc inherits from yellowblock.py
             hbm.add_parameter('TWIDTH', "9")
             hbm.add_parameter('HBM_ADD_BANK_SEL', "0")
             hbm.add_parameter('AXI_ADD_WIDTH', "33")
-            hbm.add_parameter('AXI_BURST_SIZE', "1")
+            hbm.add_parameter('AXI_BURST_SIZE', "16")
+            hbm.add_parameter('AXI_BURST_SIZE_LOG2', "4")
+            hbm.add_parameter('AXI_BURST_LOG2', "9")
             hbm.add_parameter('ATWIDTH', "6")
             hbm.add_parameter('TEST_MODE', "1")
 
@@ -172,11 +174,14 @@ class hbm(YellowBlock): # class hmc inherits from yellowblock.py
             hbm.add_parameter('NUM_DATA_BYTES', "32")
             hbm.add_parameter('AWIDTH', "27")
             hbm.add_parameter('TWIDTH', "9")
-            hbm.add_parameter('HBM_ADD_BANK_SEL', "1")
+            hbm.add_parameter('HBM_ADD_BANK_SEL', "0")
             hbm.add_parameter('AXI_ADD_WIDTH', "33")
-            hbm.add_parameter('AXI_BURST_SIZE', "1")
+            hbm.add_parameter('AXI_BURST_SIZE', "16")
+            hbm.add_parameter('AXI_BURST_SIZE_LOG2', "4")
+            hbm.add_parameter('AXI_BURST_LOG2', "9")
             hbm.add_parameter('ATWIDTH', "6")
-
+            hbm.add_parameter('TEST_MODE', "1")
+            
             # AXI Interface Ports 4
             hbm.add_port('m_axis_rx_TADD_Link0', 's_axi_4_araddr',  dir='out', width=32)
             hbm.add_port('m_axis_rx_TADD_READY_Link0', 's_axi_4_arready', dir='in', width=1)
@@ -374,6 +379,9 @@ class hbm(YellowBlock): # class hmc inherits from yellowblock.py
         self.add_source('hbm/*.v')
         self.add_source('hbm/ip/fifo_generator_wr_hbm_cntrl_0/*.xci')
         self.add_source('hbm/ip/fifo_generator_wr_hbm_data_0/*.xci')
+        self.add_source('hbm/ip/fifo_generator_rd_hbm_cntrl_0/*.xci')
+        self.add_source('hbm/ip/fifo_generator_rd_hbm_data_0/*.xci')
+
         # This block takes an HBM memory bank site and should prevent other blocks from using it
         self.exc_requires = ['hbm_mem_bank%d' % self.mem_bank]
 
