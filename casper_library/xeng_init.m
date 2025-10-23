@@ -44,12 +44,12 @@ if n_ants == 0,
   return;
 end
 
-if n_ants < 4,
-    warndlg('X engine is not designed to work with less than 4 antennas. Defaulting to 4.');
-    warning('X Engine is not designed to work with less than 4 antennas. Defaulting to 4.');
-    set_param(blk, 'n_ants', '4');
-    n_ants=4;
-end
+% if n_ants < 4,
+%     warndlg('X engine is not designed to work with less than 4 antennas. Defaulting to 4.');
+%     warning('X Engine is not designed to work with less than 4 antennas. Defaulting to 4.');
+%     set_param(blk, 'n_ants', '4');
+%     n_ants=4;
+% end
 
 
 if floor(n_ants/2 + 1) >= acc_len,
@@ -159,7 +159,26 @@ reuse_block(blk, 'mcnt_in', 'built-in/inport','Position', [55,293,85,307]);
 
 last_baseline_tap = ['baseline_tap', num2str(floor(n_ants/2))];
 
-if (n_ants == 4)
+if (n_ants == 2)
+    reuse_block(blk, 'xeng_descramble', 'casper_library_correlator/xeng_descramble', ...
+        'Position', [x + 100, 105, x + 200, 163], ...
+        'num_ants', sprintf('%d',n_ants), ...
+        'n_bits', sprintf('%d',n_bits), ...
+        'demux_factor', sprintf('%d',demux_factor),...
+        'LinkStatus','inactive',...
+        'acc_len', sprintf('%d',acc_len));
+    add_line(blk, 'xeng_descramble/1', 'acc/1', 'autorouting', 'on');
+    add_line(blk, 'xeng_descramble/2', 'valid/1', 'autorouting', 'on');
+    add_line(blk, 'xeng_descramble/3', 'sync_out/1', 'autorouting', 'on');
+    add_line(blk, 'xeng_descramble/3', 'sample_and_hold3/1', 'autorouting', 'on');
+    
+    add_line(blk, [last_baseline_tap, '/4'], 'xeng_descramble/1','autorouting', 'on');
+    add_line(blk, [last_baseline_tap, '/5'], 'xeng_descramble/2', 'autorouting', 'on');
+    add_line(blk, [last_baseline_tap, '/7'], 'xeng_descramble/3', 'autorouting', 'on');
+    add_line(blk, 'window_delay/1', 'xeng_descramble/4', 'autorouting', 'on');
+    
+elseif (n_ants == 4)
+% if (n_ants == 4)
     reuse_block(blk, 'xeng_descramble_4ant', 'casper_library_correlator/xeng_descramble_4ant', ...
         'Position', [x + 100, 105, x + 200, 163], ...
         'n_bits', sprintf('%d',n_bits), ...
